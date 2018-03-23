@@ -1,3 +1,4 @@
 include LICENSE AUTHORS README CHANGES
+recursive-include testsuite *.py
 
 global-exclude *.pyc *.pyo .DS_Store
