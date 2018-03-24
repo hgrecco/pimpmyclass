@@ -333,6 +333,9 @@ class TransformMethod(InstanceConfigurableMethod):
     def check_signature(self, func):
         super().check_signature(func)
 
+        if not self.params:
+            return
+
         names = tuple(inspect.signature(func).parameters.keys())
 
         p = self.params.pop(None, None)
