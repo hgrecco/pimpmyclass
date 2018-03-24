@@ -5,7 +5,7 @@ import unittest
 
 
 def testsuite():
-    """A testsuite that has all the lantz tests.
+    """A testsuite that has all the pimpmyclass tests.
     """
     return unittest.TestLoader().discover(os.path.dirname(__file__))
 

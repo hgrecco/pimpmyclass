@@ -8,11 +8,11 @@ branches:
     - master
 
 install:
-    - pip install . --use-mirrors
+    - pip install .
     - pip install coveralls
 
 script:
-  - python -bb -m coverage run -p --source=pint --omit="*test*" setup.py test
+  - python -bb -m coverage run -p --source=pimpmyclass --omit="*test*" setup.py test
   - coverage combine
   - coverage report -m
 
