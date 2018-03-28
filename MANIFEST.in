@@ -1,4 +1,4 @@
 include LICENSE AUTHORS README CHANGES
-recursive-include testsuite *.py
+recursive-include pimpmyclass *.py
 
 global-exclude *.pyc *.pyo .DS_Store
