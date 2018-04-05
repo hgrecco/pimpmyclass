@@ -109,7 +109,7 @@ class BoundedDictProperty:
             raise AttributeError('{} is a permanent feat of {}'.format(self.df.name, instance.__class__.__name__))
 
     def __repr__(self):
-        return repr(self.df.value[self.instance])
+        return '%r.%s[]' % (self.instance, self.df.name)
 
     def __getattr__(self, item):
         return getattr(self.df, item)
