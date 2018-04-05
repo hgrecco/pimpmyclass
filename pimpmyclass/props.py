@@ -481,8 +481,7 @@ class ObservableProperty(CacheProperty):
         if isinstance(self.name, DictPropertyNameKey):
             old_value = self.recall(instance)
             super().store(instance, value)
-            getattr(instance, self.name.name + '_changed').emit(value, old_value,
-                                                                key=self.name.key)
+            getattr(instance, self.name.name + '_changed').emit(value, old_value, self.name.key)
         else:
             old_value = self.recall(instance)
             super().store(instance, value)
