@@ -1,4 +1,6 @@
 
+import enum
+
 from .helpers import missingdict, require, DictPropertyNameKey
 from .mixins import CacheMixin, ObservableMixin
 from .props import NamedProperty
@@ -26,9 +28,9 @@ class DictProperty(NamedProperty):
     def __set__(self, instance, value):
 
         if not isinstance(value, dict):
-            raise AttributeError('A dictionary property cannot be set in this way. '
+            raise AttributeError('The dictionary property (%s) cannot be set to a type %s '
                                  'You probably want to do something like:'
-                                 'obj.prop[index] = value or obj.prop = dict')
+                                 'obj.prop[index] = value or obj.prop = dict-like' % (self.name, type(value)))
 
         for key, value in value.items():
             self.setitem(instance, key, value)
@@ -65,6 +67,9 @@ class DictProperty(NamedProperty):
     def delitem(self, instance, key):
         return self.subproperty(instance, key).__delete__(instance)
 
+    def getall(self, instance):
+        return {key: self.getitem(instance, key) for key in self._subproperties.keys()}
+
 
 class BoundedDictProperty:
     """Helper class to provide indexed access to DictFeat.
@@ -74,18 +79,42 @@ class BoundedDictProperty:
         self.instance = instance
         self.df = dictfeat
 
+    def _get_key_val(self, key):
+
+        keys = self.df.keys
+
+        if keys is None:
+            return key
+
+        if isinstance(keys, enum.EnumMeta):
+            if isinstance(key, enum.Enum):
+                return key.value
+
+            elif isinstance(key, str):
+                try:
+                    key = keys[key]
+                except KeyError:
+                    raise KeyError('{} is not valid key for {} {}'.format(key, self.df.name, keys))
+
+                return key.value
+
+            else:
+                raise KeyError('{} is not valid key for {} {}'.format(key, self.df.name, keys))
+
+        elif isinstance(keys, dict):
+            try:
+                key = keys[key]
+            except KeyError:
+                raise KeyError('{} is not valid key for {} {}'.format(key, self.df.name, keys))
+
+        return key
+
     def __getitem__(self, key):
 
         if self.df.fget is None:
             raise AttributeError('{} is a read-only feat'.format(self.df.name))
 
-        keys = self.df.keys
-
-        if keys and key not in keys:
-            raise KeyError('{} is not valid key for {} {}'.format(key, self.df.name, keys))
-
-        if isinstance(keys, dict):
-            key = keys[key]
+        key = self._get_key_val(key)
 
         return DictProperty.getitem(self.df, self.instance, key)
 
@@ -94,13 +123,7 @@ class BoundedDictProperty:
         if self.df.fset is None:
             raise AttributeError('{} is a write-only feat'.format(self.df.name))
 
-        keys = self.df.keys
-
-        if keys and not key in keys:
-            raise KeyError('{} is not valid key for {} {}'.format(key, self.df.name, keys))
-
-        if isinstance(keys, dict):
-            key = keys[key]
+        key = self._get_key_val(key)
 
         DictProperty.setitem(self.df, self.instance, key, value)
 

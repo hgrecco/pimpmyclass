@@ -33,6 +33,22 @@ def define(proptype, *bases, **kwargs):
     return Dummy
 
 
+def define_w_keys(proptype, keys, *bases, **kwargs):
+
+    class Dummy(*bases, **kwargs):
+        _internal = {}
+
+        @proptype(keys=keys)
+        def test(self, key):
+            return self._internal.get(key, None)
+
+        @test.setter
+        def test(self, key, value):
+            self._internal[key] = value
+
+    return Dummy
+
+
 class TestMixins(unittest.TestCase):
 
     def test_dict(self):
@@ -84,3 +100,54 @@ class TestMixins(unittest.TestCase):
         # The storage format is using a (named)tuple
         self.assertEqual(dummy.storage['cache'], {('test', 0): 4})
 
+    def test_dict_dictkeys(self):
+
+        dummy = define_w_keys(dictprops.DictProperty, {'x': 1, 2: 'y'})()
+        self.assertIsInstance(dummy.test, dictprops.BoundedDictProperty)
+
+        with self.assertRaises(KeyError):
+            dummy.test[1] = 1
+
+        with self.assertRaises(KeyError):
+            dummy.test[1]
+
+        with self.assertRaises(KeyError):
+            dummy.test['y'] = 1
+
+        with self.assertRaises(KeyError):
+            dummy.test['y']
+
+        dummy.test['x'] = 4
+        self.assertEqual(dummy.test['x'], 4)
+        self.assertEqual(dummy._internal[1], 4)
+
+    def test_dict_enumkeys(self):
+
+        import enum
+
+        class KK(enum.Enum):
+            X = 1
+            Two = 'y'
+
+        dummy = define_w_keys(dictprops.DictProperty, KK)()
+        self.assertIsInstance(dummy.test, dictprops.BoundedDictProperty)
+
+        with self.assertRaises(KeyError):
+            dummy.test[1] = 1
+
+        with self.assertRaises(KeyError):
+            dummy.test[1]
+
+        with self.assertRaises(KeyError):
+            dummy.test['y'] = 1
+
+        with self.assertRaises(KeyError):
+            dummy.test['y']
+
+        dummy.test[KK.X] = 4
+        self.assertEqual(dummy.test['X'], 4)
+        self.assertEqual(dummy._internal[1], 4)
+
+        dummy.test['Two'] = 2
+        self.assertEqual(dummy.test['Two'], 2)
+        self.assertEqual(dummy._internal['y'], 2)
