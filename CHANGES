@@ -5,7 +5,8 @@ Lantz-drivers Changelog
 0.2 (unreleased)
 ----------------
 
-- Nothing changed yet.
+- Added the possibility to use Python Enum 
+  as keys in DictFeat.
 
 
 0.1.3 (2018-04-04)
