@@ -205,6 +205,59 @@ class TestOtherProperties(unittest.TestCase):
                                        'Getting properr',
                                        'While getting properr: GetArrrg!'])
 
+    def test_log_config_false(self):
+
+        Dummy = define(lambda: props.LogProperty(log_values=False), mixins.LogMixin)
+        x = Dummy()
+
+        hdl = MemHandler()
+        x.logger.addHandler(hdl)
+        x.logger.setLevel(logging.DEBUG)
+
+        x.prop = 1
+        y = x.prop
+        with self.assertRaises(Exception):
+            x.prop = None
+
+        with self.assertRaises(Exception):
+            x.properr
+
+        self.assertEqual(hdl.history, ["Setting prop to <class 'int'>",
+                                       "prop was set to <class 'int'>",
+                                       "Getting prop",
+                                       "Got <class 'int'> for prop",
+                                       "Setting prop to <class 'NoneType'>",
+                                       "While setting prop to <class 'NoneType'>: Arrrg!",
+                                       "Getting properr",
+                                       "While getting properr: GetArrrg!"])
+
+    def test_log_config_fun(self):
+
+        Dummy = define(lambda: props.LogProperty(log_values=lambda x: 2 * x if isinstance(x, int) else x), mixins.LogMixin)
+        x = Dummy()
+
+        hdl = MemHandler()
+        x.logger.addHandler(hdl)
+        x.logger.setLevel(logging.DEBUG)
+
+        x.prop = 1
+        y = x.prop
+        with self.assertRaises(Exception):
+            x.prop = None
+
+        with self.assertRaises(Exception):
+            x.properr
+
+        self.assertEqual(hdl.history, ['Setting prop to 2',
+                                       'prop was set to 2',
+                                       'Getting prop',
+                                       'Got 6 for prop',
+                                       'Setting prop to None',
+                                       'While setting prop to None: Arrrg!',
+                                       'Getting properr',
+                                       'While getting properr: GetArrrg!'])
+
+
     def test_lock(self):
 
         with self.assertRaises(Exception):

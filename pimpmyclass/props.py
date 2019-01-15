@@ -247,17 +247,38 @@ class LogProperty(NamedProperty):
     Requires that the owner class inherits LogMixin.
     """
 
+    log_values = True
+
+    def __init__(self, *args, **kwargs):
+        self.log_values = kwargs.pop('log_values', True)
+        super().__init__(*args, **kwargs)
+
+        self.kwargs.update({'log_values': self.log_values})
+
     def __set_name__(self, owner, name):
         require(self, owner, name, BaseLogMixin)
 
         super().__set_name__(owner, name)
+
+    def _to_log(self, instance, value):
+        if self.log_values is True:
+            return value
+
+        elif callable(self.log_values):
+            try:
+                return self.log_values(value)
+            except Exception as e:
+                instance.log_error('Could not convert value to log in %s, logging type: e', self.name, e)
+
+        return type(value)
 
     def get(self, instance, objtype):
 
         instance.log_info('Getting %s', self.name)
         try:
             value = super().get(instance, objtype)
-            instance.log_debug('Got %s for %s', value, self.name)
+            log_value = self._to_log(instance, value)
+            instance.log_debug('Got %s for %s', log_value, self.name)
         except Exception as e:
             instance.log_error('While getting %s: %s', self.name, e)
             raise e
@@ -265,12 +286,13 @@ class LogProperty(NamedProperty):
         return value
 
     def set(self, instance, value):
-        instance.log_debug('Setting %s to %s', self.name, value)
+        log_value = self._to_log(instance, value)
+        instance.log_debug('Setting %s to %s', self.name, log_value)
         try:
             super().set(instance, value)
-            instance.log_debug('%s was set to %s', self.name, value)
+            instance.log_debug('%s was set to %s', self.name, log_value)
         except Exception as e:
-            instance.log_error('While setting %s to %s: %s', self.name, value, e)
+            instance.log_error('While setting %s to %s: %s', self.name, log_value, e)
             raise e
 
 

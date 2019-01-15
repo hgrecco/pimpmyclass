@@ -85,6 +85,37 @@ class LockMethod(NamedMethod):
 
 class LogMethod(NamedMethod):
 
+    log_values = True
+
+    def __init__(self, *args, **kwargs):
+        self.log_values = kwargs.pop('log_values', True)
+        super().__init__(*args, **kwargs)
+
+    def _to_log(self, instance, value):
+        if self.log_values is True:
+            return value
+
+        elif callable(self.log_values):
+            try:
+                return self.log_values(value)
+            except Exception as e:
+                instance.log_error('Could not convert value to log in %s, logging type: e', self.name, e)
+                return type(value)
+
+        return type(value)
+
+    def _args_kwargs_to_log(self, instance, args, kwargs):
+        if self.log_values is True:
+            return args, kwargs
+
+        elif callable(self.log_values):
+            try:
+                return tuple(self.log_values(arg) for arg in args), {k: self.log_values(v) for k, v in kwargs.items()}
+            except Exception as e:
+                instance.log_error('Could not convert value to log in %s, logging type: e', self.name, e)
+
+        return tuple(type(arg) for arg in args), {k: type(v) for k, v in kwargs.items()}
+
     def __set_name__(self, owner, name):
         require(self, owner, name, LogMixin)
 
@@ -92,13 +123,14 @@ class LogMethod(NamedMethod):
 
     def call(self, instance, *args, **kwargs):
         if args or kwargs:
-            instance.log_info('Calling %s with (%s, %s))', self.name, args, kwargs)
+            _args, _kwargs = self._args_kwargs_to_log(instance, args, kwargs)
+            instance.log_info('Calling %s with (%s, %s))', self.name, _args, _kwargs)
         else:
             instance.log_info('Calling %s', self.name)
 
         try:
             out = super().call(instance, *args, **kwargs)
-            instance.log_info('%s returned %s', self.name, out)
+            instance.log_info('%s returned %s', self.name, self._to_log(instance, out))
             return out
         except Exception as e:
             instance.log_error('While calling %s: %s', self.name, e)
