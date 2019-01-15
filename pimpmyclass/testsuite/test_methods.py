@@ -62,3 +62,57 @@ class TestMethods(unittest.TestCase):
         Dummy.method2.params = {'n': lambda x: 2*x}
         self.assertEqual(x.method2(2), 12)
 
+    def test_log(self):
+
+        with self.assertRaises(Exception):
+            define(methods.LogMethod)
+
+        Dummy = define(methods.LogMethod, mixins.LogMixin)
+        x = Dummy()
+
+        hdl = MemHandler()
+        x.logger.addHandler(hdl)
+        x.logger.setLevel(logging.DEBUG)
+
+        x.method()
+        x.method2(3)
+
+        self.assertEqual(hdl.history, ['Calling method',
+                                       'method returned 3',
+                                       'Calling method2 with ((3,), {}))',
+                                       'method2 returned 9'])
+
+    def test_log_config_false(self):
+
+        Dummy = define(lambda: methods.LogMethod(log_values=False), mixins.LogMixin)
+        x = Dummy()
+
+        hdl = MemHandler()
+        x.logger.addHandler(hdl)
+        x.logger.setLevel(logging.DEBUG)
+
+        x.method()
+        x.method2(3)
+
+        self.assertEqual(hdl.history, ['Calling method',
+                                       "method returned <class 'int'>",
+                                       "Calling method2 with ((<class 'int'>,), {}))",
+                                       "method2 returned <class 'int'>"])
+
+
+    def test_log_config_fun(self):
+
+        Dummy = define(lambda: methods.LogMethod(log_values=lambda x: '%s %s' % (x, type(x))), mixins.LogMixin)
+        x = Dummy()
+
+        hdl = MemHandler()
+        x.logger.addHandler(hdl)
+        x.logger.setLevel(logging.DEBUG)
+
+        x.method()
+        x.method2(3)
+
+        self.assertEqual(hdl.history, ['Calling method',
+                                       "method returned 3 <class 'int'>",
+                                       """Calling method2 with (("3 <class 'int'>",), {}))""",
+                                       "method2 returned 9 <class 'int'>"])
