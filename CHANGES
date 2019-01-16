@@ -2,7 +2,7 @@ Lantz-drivers Changelog
 =======================
 
 
-0.3 (unreleased)
+0.3 (2019-01-16)
 ----------------
 
 - Implemented `log_values` to toggle how values are logged
