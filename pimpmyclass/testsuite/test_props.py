@@ -23,14 +23,25 @@ def define(proptype, *bases):
 
         logger_name = 'testing123'
 
+        _internal = 3
+        _prop_gs = 8
+
         @proptype()
         def prop(self):
-            return 3
+            return self._internal
 
         @prop.setter
         def prop(self, value):
             if value is None:
                 raise Exception('Arrrg!')
+
+        @proptype()
+        def prop_gs(self):
+            return self._prop_gs
+
+        @prop_gs.setter
+        def prop_gs(self, value):
+            self._prop_gs = value
 
         @proptype()
         def properr(self):
@@ -310,3 +321,41 @@ class TestOtherProperties(unittest.TestCase):
         self.assertEqual(c.prop, c._value)
         c.prop = 3
         self.assertEqual(c._value, 9)
+
+    def test_readonce(self):
+
+        # Defaults to False
+        Dummy = define(lambda: props.ReadOnceProperty(),
+                       mixins.CacheMixin, mixins.BaseLogMixin, mixins.StorageMixin)
+        x = Dummy()
+
+        self.assertEqual(x.prop, 3)
+        x._internal = 9
+        self.assertEqual(x.prop, 9)
+
+
+    def test_readonce_true(self):
+        Dummy = define(lambda: props.ReadOnceProperty(read_once=True),
+                       mixins.CacheMixin, mixins.BaseLogMixin, mixins.StorageMixin)
+        x = Dummy()
+
+        self.assertEqual(x.prop, 3)
+        x._internal = 9
+        self.assertEqual(x.prop, 3)
+
+    def test_prevent_unnecesary_set(self):
+
+        # Defaults to False
+        Dummy = define(props.PreventUnnecessarySetProperty,
+                       mixins.CacheMixin, mixins.BaseLogMixin, mixins.StorageMixin)
+        x = Dummy()
+
+        self.assertEqual(x.prop_gs, 8)
+        x.prop_gs = 9
+        self.assertEqual(x.prop_gs, 9)
+
+        # Because we prevent unnecessary set but we change it under the hood
+        # the value is not updated
+        x._prop_gs = 0
+        x.prop_gs = 9
+        self.assertEqual(x.prop_gs, 0)
