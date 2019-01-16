@@ -435,8 +435,8 @@ class CacheProperty(StorageProperty):
         CacheProperty._store_del(self, instance)
 
 
-class GetSetCacheProperty(CacheProperty):
-    """A property that stores the get or set value in the cache.
+class GetCacheProperty(CacheProperty):
+    """A property that stores the get value in the cache.
 
     Requires that the owner class inherits StorageMixin.
     """
@@ -449,13 +449,27 @@ class GetSetCacheProperty(CacheProperty):
 
         return value
 
+
+class SetCacheProperty(CacheProperty):
+    """A property that stores the set value in the cache.
+
+    Requires that the owner class inherits StorageMixin.
+    """
+
     def set(self, instance, value):
         super().set(instance, value)
 
         self.store(instance, value)
 
 
-class PreventUnnecessarySetProperty(CacheProperty):
+class GetSetCacheProperty(GetCacheProperty, SetCacheProperty):
+    """A property that stores the get or set value in the cache.
+
+    Requires that the owner class inherits StorageMixin.
+    """
+
+
+class PreventUnnecessarySetProperty(SetCacheProperty):
     """A property that prevents unnecessary set operations by comparing
     the value in the cache with the value to be set.
 
@@ -476,7 +490,7 @@ class PreventUnnecessarySetProperty(CacheProperty):
         self.set(instance, value)
 
 
-class ReadOnceProperty(InstanceConfigurableProperty, CacheProperty):
+class ReadOnceProperty(InstanceConfigurableProperty, GetCacheProperty):
 
     read_once = Config()
 
