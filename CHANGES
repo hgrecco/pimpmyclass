@@ -5,7 +5,9 @@ Lantz-drivers Changelog
 0.3 (unreleased)
 ----------------
 
-- Nothing changed yet.
+- Implemented `log_values` to toggle how values are logged
+- Improved testing.
+- Split GetSetCacheProperty into GetCacheProperty and SetCacheProperty
 
 
 0.2 (2018-11-27)
