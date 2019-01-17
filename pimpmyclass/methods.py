@@ -55,6 +55,8 @@ class NamedMethod:
         self.check_signature(func)
         self._func = func
 
+        self.__doc__ = func.__doc__
+        
         class NewCallable:
 
             def __get__(selfie, instance, owner=None):
