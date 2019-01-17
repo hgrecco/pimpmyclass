@@ -4,7 +4,7 @@ import functools
 import inspect
 import weakref
 
-from .helpers import require, Config, keep_if_not
+from .helpers import require, InstanceConfig, keep_if_not
 from .mixins import LockMixin, LogMixin, StorageMixin, BaseLogMixin
 from .stats import RunningStats
 
@@ -12,6 +12,26 @@ from .stats import RunningStats
 class NamedMethod:
 
     _func = None
+
+    _config_keys = None
+    _config = None
+    _config_unset_value = None
+
+    def __init__(self, **kwargs):
+        self.kwargs = {}
+
+        self._config = {}
+
+        if self._config_keys:
+            for k in self._config_keys:
+                if k in kwargs:
+                    self._config[k] = kwargs.pop(k)
+
+            if kwargs:
+                raise TypeError("%s() got an unexpected keyword argument '%s'" %
+                                (self.__class__.__name__, list(kwargs.keys())[0]))
+
+        self.kwargs = dict(self._config)
 
     @property
     def name(self):
@@ -288,17 +308,20 @@ class InstanceConfigurableMethod(StorageMethod):
     _storage_ns = 'iconfigm'
     _storage_ns_init = lambda _: defaultdict(dict)
 
-    _config_keys = None
-    _config = None
-    _config_unset_value = None
+    _instance_config_keys = None
 
     def __init__(self, *args, **kwargs):
-        self._config = {}
-        for k in self._config_keys:
-            if k in kwargs:
-                self._config[k] = kwargs.pop(k)
 
-        super().__init__()
+        tmp = {}
+
+        if self._instance_config_keys:
+            for k in self._config_keys:
+                if k in kwargs:
+                    tmp = kwargs.pop(k)
+
+        super().__init__(*args, **kwargs)
+
+        self.kwargs.update(tmp)
 
     def config_get(self, instance, key):
 
@@ -331,7 +354,7 @@ class TransformMethod(InstanceConfigurableMethod):
     _storage_ns = 'transformationsm'
     _storage_ns_init = lambda _: defaultdict(dict)
 
-    params = Config()
+    params = InstanceConfig()
 
     def __set_name__(self, owner, name):
         require(self, owner, name, StorageMixin, BaseLogMixin)

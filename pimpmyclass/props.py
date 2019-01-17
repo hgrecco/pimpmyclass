@@ -5,7 +5,7 @@ import functools as ft
 import inspect
 import weakref
 
-from .helpers import missingdict, require, DictPropertyNameKey, Config
+from .helpers import missingdict, require, DictPropertyNameKey, InstanceConfig
 from .stats import RunningStats
 from .mixins import StorageMixin, BaseLogMixin, LockMixin, CacheMixin, ObservableMixin
 
@@ -19,7 +19,12 @@ class NamedProperty:
     name = ''
     kwargs = None
 
-    def __init__(self, fget=None, fset=None, fdel=None, doc=None):
+    _config_keys = None
+    _config = None
+
+    _config_unset_value = None
+
+    def __init__(self, fget=None, fset=None, fdel=None, doc=None, **kwargs):
         self.fget = fget
         self.fset = fset
         self.fdel = fdel
@@ -28,6 +33,18 @@ class NamedProperty:
         self.__doc__ = doc
 
         self.kwargs = {}
+
+        self._config = {}
+        if self._config_keys:
+            for k in self._config_keys:
+                if k in kwargs:
+                    self._config[k] = kwargs.pop(k)
+
+        if kwargs:
+            raise TypeError("%s() got an unexpected keyword argument '%s'" %
+                            (self.__class__.__name__, list(kwargs.keys())[0]))
+
+        self.kwargs = dict(self._config)
 
     def __set_name__(self, owner, name):
         self.name = name
@@ -326,19 +343,20 @@ class InstanceConfigurableProperty(StorageProperty):
     _storage_ns = 'iconfig'
     _storage_ns_init = lambda _: defaultdict(dict)
 
-    _config_keys = None
-    _config = None
-    _config_unset_value = None
+    _instance_config_keys = None
 
     def __init__(self, *args, **kwargs):
-        self._config = {}
-        for k in self._config_keys:
-            if k in kwargs:
-                self._config[k] = kwargs.pop(k)
+
+        tmp = {}
+
+        if self._instance_config_keys:
+            for k in self._instance_config_keys:
+                if k in kwargs:
+                    tmp[k] = kwargs.pop(k)
 
         super().__init__(*args, **kwargs)
 
-        self.kwargs.update(self._config)
+        self.kwargs.update(tmp)
 
     def config_get(self, instance, key):
 
@@ -358,7 +376,7 @@ class InstanceConfigurableProperty(StorageProperty):
         self.on_config_set(instance, key, value)
 
     def config_iter(self, instance):
-        for key in self._config_keys:
+        for key in self._instance_config_keys:
             yield key, self.config_get(instance, key)
 
     def on_config_set(self, instance, key, value):
@@ -372,8 +390,8 @@ class TransformProperty(InstanceConfigurableProperty):
     Requires that the owner class inherits InstanceConfigurableProperty.
     """
 
-    pre_set = Config()
-    post_get = Config()
+    pre_set = InstanceConfig()
+    post_get = InstanceConfig()
 
     def __set_name__(self, owner, name):
         require(self, owner, name, StorageMixin, BaseLogMixin)
@@ -492,7 +510,7 @@ class PreventUnnecessarySetProperty(SetCacheProperty):
 
 class ReadOnceProperty(InstanceConfigurableProperty, GetCacheProperty):
 
-    read_once = Config()
+    read_once = InstanceConfig()
 
     def get(self, instance, owner=None):
         if self.read_once_iget(instance) and self.recall(instance) is not instance._cache_unset_value:

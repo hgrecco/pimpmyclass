@@ -89,6 +89,26 @@ def require_any(inst, owner, name, *parents):
 class Config:
 
     def __set_name__(self, owner, name):
+        from .props import NamedProperty
+        from .methods import NamedMethod
+        require_any(self, owner, name, NamedProperty, NamedMethod)
+        if owner._config_keys is None:
+            owner._config_keys = set()
+
+        owner._config_keys.add(name)
+
+        def _get(selfie):
+            return selfie.config_get(None, name)
+
+        def _set(selfie, value):
+            return selfie.config_set(None, name, value)
+
+        setattr(owner, name, property(_get, _set))
+
+
+class InstanceConfig:
+
+    def __set_name__(self, owner, name):
         from .props import InstanceConfigurableProperty
         from .methods import InstanceConfigurableMethod
         require_any(self, owner, name, InstanceConfigurableProperty, InstanceConfigurableMethod)
