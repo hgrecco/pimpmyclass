@@ -322,6 +322,18 @@ class TestOtherProperties(unittest.TestCase):
         c.prop = 3
         self.assertEqual(c._value, 9)
 
+    def test_cache(self):
+
+        # Defaults to False
+        Dummy = define(lambda: props.ReadOnceProperty(),
+                       mixins.CacheMixin, mixins.BaseLogMixin, mixins.StorageMixin)
+        x = Dummy()
+
+        self.assertEqual(x.prop, 3)
+        self.assertEqual(x.prop_gs, 8)
+        self.assertEqual(x.recall('prop'), 3)
+        self.assertEqual(x.recall(('prop', 'prop_gs')), dict(prop=3, prop_gs=8))
+
     def test_readonce(self):
 
         # Defaults to False

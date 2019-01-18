@@ -86,35 +86,74 @@ def require_any(inst, owner, name, *parents):
                         (name, inst.__class__.__name__, owner.__name__, parents))
 
 
-def prepend_to_docstring(s, docstring):
-    if not docstring:
-        return s
+def guess_indent(text, skip_first=False):
+    if not text:
+        return ''
 
     # Find the indentation of this docstring
-    # by looking at the minimum numbe of leading chars
+    # by looking at the minimum number of leading chars
     # in non empty lines
 
     leading_spaces = 10000000000000
     leading_tabs = 10000000000000
-    for line in docstring.split('\n'):
+
+    first_space = False
+    first_tab = False
+
+    lines = text.split('\n')
+
+    if skip_first:
+        if len(lines) == 1:
+            return ''
+        lines = lines[1:]
+
+    for line in lines:
         # skip empty lines
         if not line.strip():
             continue
         leading_spaces = min(leading_spaces, len(line) - len(line.lstrip(' ')))
         leading_tabs = min(leading_tabs, len(line) - len(line.lstrip('\t')))
 
-    if leading_spaces and leading_tabs:
-        raise ValueError('Mixed tabs and spaces in docstring\n' + docstring)
+        first_space = first_space or line[0] == ' '
+        first_tab = first_tab or line[0] == '\t'
 
-    if leading_spaces:
-        return (' ' * leading_spaces) + docstring
+    if first_space and first_tab:
+        raise ValueError('Mixed tabs and spaces in docstring\n' + text)
+    elif first_space:
+        return ' ' * leading_spaces
+    elif first_tab:
+        return '\t' * leading_tabs
+    else:
+        return ''
 
-    return ('\t' * leading_tabs) + docstring
+
+def prepend_to_docstring(s, docstring):
+    if not docstring:
+        return s
+
+    return guess_indent(docstring, False) + s + docstring
 
 
-# This sentinel indicates a configuration value of a property has not been set
-# It is only for internal use as all configurations must have a defined value
-# either by a kwargs during construction or because it has a default value.
+def append_lines_to_docstring(lines, docstring):
+    if not docstring:
+        return '\n'.join(lines)
+
+    indent = guess_indent(docstring, True)
+    out = docstring
+    if lines[-1].strip():
+        #out += '\n'
+        pass
+    for line in lines:
+        if line:
+            out += indent + line + '\n'
+        else:
+            out += '\n'
+    return out + indent
+
+
+#: This sentinel indicates a configuration value of a property has not been set
+#: It is only for internal use as all configurations must have a defined value
+#: either by a kwargs during construction or because it has a default value.
 CONFIG_UNSET = object()
 
 

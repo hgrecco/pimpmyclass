@@ -372,7 +372,9 @@ class TransformMethod(InstanceConfigurableMethod):
             self.params = {}
             try:
                 self.params = dict(self._func.__transform_params__)
-                for k in self.__transform_params__.keys():
+                for k in self.params.keys():
+                    if k == '<ret>':
+                        continue
                     if k not in param_names:
                         raise ValueError('%s is not an argument name of %s', k, name)
                 del self._func.__transform_params__
@@ -385,6 +387,9 @@ class TransformMethod(InstanceConfigurableMethod):
         super().check_signature(func)
 
         if not self.params:
+            return
+
+        if not isinstance(self.params, dict):
             return
 
         names = tuple(inspect.signature(func).parameters.keys())

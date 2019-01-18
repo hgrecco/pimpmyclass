@@ -34,10 +34,39 @@ def define(proptype, *bases):
         def method2(self, n):
             return self.value * n
 
+        @proptype()
+        def method3(self, n, t):
+            return self.value * n
+
     return Dummy
 
 
 class TestMethods(unittest.TestCase):
+
+    def test_timing(self):
+
+        with self.assertRaises(Exception):
+            define(methods.StatsMethod)
+
+        Dummy = define(methods.StatsMethod, mixins.StorageMixin)
+        x = Dummy()
+        y = Dummy()
+
+        def g(i):
+            return getattr(i.__class__, 'method')
+
+        self.assertIsNot(g(x).stats, g(y).stats)
+
+        s = g(x).stats(x, 'call')
+        self.assertEqual(s.count, 0)
+
+        self.assertEqual(x.method(), 3)
+
+        s = g(x).stats(x, 'call')
+        self.assertEqual(s.count, 1)
+
+        s = g(y).stats(y, 'call')
+        self.assertEqual(s.count, 0)
 
     def test_lock(self):
 
@@ -47,6 +76,14 @@ class TestMethods(unittest.TestCase):
         Dummy = define(methods.LockMethod, mixins.LockMixin)
         x = Dummy()
         self.assertEqual(x.method(), 3)
+
+    def test_async(self):
+
+        Dummy = define(methods.LockMethod, mixins.AsyncMixin)
+        Dummy.attach_async(Dummy.method)
+        x = Dummy()
+        self.assertEqual(x.method(), 3)
+        self.assertEqual(x.method_async().result(), 3)
 
     def test_transformations(self):
 
@@ -61,6 +98,64 @@ class TestMethods(unittest.TestCase):
 
         Dummy.method2.params = {'n': lambda x: 2*x}
         self.assertEqual(x.method2(2), 12)
+
+    def test_transformations_param_ret(self):
+
+        class Dummy(mixins.StorageMixin, mixins.BaseLogMixin):
+
+            @methods.TransformMethod()
+            @methods.TransformMethod.param('x', lambda o: 2 * o)
+            @methods.TransformMethod.ret(lambda o: o / 9)
+            def method(self, x, y):
+                return x + y * 3
+
+        d = Dummy()
+        self.assertEqual(d.method(2, 3), (2 * 2 + 3 * 3) / 9)
+
+    def test_transformations_param_tuple(self):
+
+        class Dummy(mixins.StorageMixin, mixins.BaseLogMixin):
+
+            @methods.TransformMethod()
+            @methods.TransformMethod.param(('x', 'y'), lambda o: 2 * o)
+            @methods.TransformMethod.ret(lambda o: o / 9)
+            def method(self, x, y):
+                return x + y * 3
+
+        d = Dummy()
+        self.assertEqual(d.method(2, 3), (2 * 2 + 2 * 3 * 3) / 9)
+
+    def test_transformations1(self):
+
+        class Dummy(mixins.StorageMixin, mixins.BaseLogMixin):
+
+            @methods.TransformMethod(params=lambda o: 3 * o)
+            def method(self, x):
+                return x * 3
+
+        d = Dummy()
+        self.assertEqual(d.method(2), 2 * 3 * 3)
+
+    def test_transformations_deprecated(self):
+
+        with self.assertRaises(Exception):
+
+            class Dummy(mixins.StorageMixin, mixins.BaseLogMixin):
+
+                @methods.TransformMethod(params=lambda o: 3 * o)
+                def method(self, x, y):
+                    return x + y * 3
+
+    def test_transformations_wrong_name(self):
+
+        with self.assertRaises(Exception):
+
+            class Dummy(mixins.StorageMixin, mixins.BaseLogMixin):
+
+                @methods.TransformMethod()
+                @methods.TransformMethod.param('w', lambda o: 2 * o)
+                def method(self, x, y):
+                    return x + y * 3
 
     def test_log(self):
 
@@ -118,7 +213,7 @@ class TestMethods(unittest.TestCase):
                                        "method2 returned 9 <class 'int'>"])
 
 
-class TestPropertyConfig(unittest.TestCase):
+class TestMethodsConfig(unittest.TestCase):
 
     def test_config(self):
 
