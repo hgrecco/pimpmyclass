@@ -1,11 +1,12 @@
 
 
+import copy
 from collections import defaultdict
 import functools as ft
 import inspect
 import weakref
 
-from .helpers import missingdict, require, DictPropertyNameKey, InstanceConfig
+from .helpers import missingdict, require, DictPropertyNameKey, InstanceConfig, CONFIG_UNSET
 from .stats import RunningStats
 from .mixins import StorageMixin, BaseLogMixin, LockMixin, CacheMixin, ObservableMixin
 
@@ -19,10 +20,8 @@ class NamedProperty:
     name = ''
     kwargs = None
 
-    _config_keys = None
     _config = None
-
-    _config_unset_value = None
+    _config_template = None
 
     def __init__(self, fget=None, fset=None, fdel=None, doc=None, **kwargs):
         self.fget = fget
@@ -34,17 +33,24 @@ class NamedProperty:
 
         self.kwargs = {}
 
-        self._config = {}
-        if self._config_keys:
-            for k in self._config_keys:
+        self._config = copy.copy(self._config_template)
+        if self._config:
+            for k in self._config.keys():
                 if k in kwargs:
-                    self._config[k] = kwargs.pop(k)
+                    v = kwargs.pop(k)
+                    setattr(self, k, v)
+                    self.kwargs[k] = v
 
         if kwargs:
             raise TypeError("%s() got an unexpected keyword argument '%s'" %
                             (self.__class__.__name__, list(kwargs.keys())[0]))
 
-        self.kwargs = dict(self._config)
+        if self._config:
+            missing = tuple(k for k, v in self._config.items() if v is CONFIG_UNSET)
+            if missing:
+                raise TypeError("%s() is missing %d positional argument%s: %s" %
+                                (self.__class__.__name__, len(missing),
+                                 's' if len(missing) > 1 else '', ','.join(missing)))
 
     def __set_name__(self, owner, name):
         self.name = name
@@ -105,6 +111,19 @@ class NamedProperty:
     def deleter(self, fdel):
         return type(self)(self.fget, self.fset, fdel, self.__doc__,
                           **getattr(self, 'kwargs') or {})
+
+    def config_get(self, instance, key):
+        return self._config[key]
+
+    def config_set(self, instance, key, value):
+        self._config[key] = value
+
+    def config_iter(self, instance):
+        for key in self._config.keys():
+            yield key, self.config_get(instance, key)
+
+    def on_config_set(self, instance, key, value):
+        pass
 
 
 class StorageProperty(NamedProperty):
@@ -343,44 +362,23 @@ class InstanceConfigurableProperty(StorageProperty):
     _storage_ns = 'iconfig'
     _storage_ns_init = lambda _: defaultdict(dict)
 
-    _instance_config_keys = None
-
-    def __init__(self, *args, **kwargs):
-
-        tmp = {}
-
-        if self._instance_config_keys:
-            for k in self._instance_config_keys:
-                if k in kwargs:
-                    tmp[k] = kwargs.pop(k)
-
-        super().__init__(*args, **kwargs)
-
-        self.kwargs.update(tmp)
-
     def config_get(self, instance, key):
 
         if instance is None:
-            return self._config.get(key, self._config_unset_value)
+            return super().config_get(None, key)
+
         try:
             return InstanceConfigurableProperty._store_get(self, instance)[key]
         except KeyError:
-            return self._config.get(key, None)
+            return super().config_get(None, key)
 
     def config_set(self, instance, key, value):
         if instance is None:
-            self._config[key] = value
+            super().config_set(None, key, value)
         else:
             InstanceConfigurableProperty._store_get(self, instance)[key] = value
 
         self.on_config_set(instance, key, value)
-
-    def config_iter(self, instance):
-        for key in self._instance_config_keys:
-            yield key, self.config_get(instance, key)
-
-    def on_config_set(self, instance, key, value):
-        pass
 
 
 class TransformProperty(InstanceConfigurableProperty):
@@ -390,8 +388,8 @@ class TransformProperty(InstanceConfigurableProperty):
     Requires that the owner class inherits InstanceConfigurableProperty.
     """
 
-    pre_set = InstanceConfig()
-    post_get = InstanceConfig()
+    pre_set = InstanceConfig(default=None, check_func=lambda x: x is None or callable(x))
+    post_get = InstanceConfig(default=None, check_func=lambda x: x is None or callable(x))
 
     def __set_name__(self, owner, name):
         require(self, owner, name, StorageMixin, BaseLogMixin)
@@ -510,7 +508,7 @@ class PreventUnnecessarySetProperty(SetCacheProperty):
 
 class ReadOnceProperty(InstanceConfigurableProperty, GetCacheProperty):
 
-    read_once = InstanceConfig()
+    read_once = InstanceConfig(default=False, valid_types=(bool, ))
 
     def get(self, instance, owner=None):
         if self.read_once_iget(instance) and self.recall(instance) is not instance._cache_unset_value:

@@ -86,54 +86,105 @@ def require_any(inst, owner, name, *parents):
                         (name, inst.__class__.__name__, owner.__name__, parents))
 
 
+def prepend_to_docstring(s, docstring):
+    if not docstring:
+        return s
+
+    # Find the indentation of this docstring
+    # by looking at the minimum numbe of leading chars
+    # in non empty lines
+
+    leading_spaces = 10000000000000
+    leading_tabs = 10000000000000
+    for line in docstring.split('\n'):
+        # skip empty lines
+        if not line.strip():
+            continue
+        leading_spaces = min(leading_spaces, len(line) - len(line.lstrip(' ')))
+        leading_tabs = min(leading_tabs, len(line) - len(line.lstrip('\t')))
+
+    if leading_spaces and leading_tabs:
+        raise ValueError('Mixed tabs and spaces in docstring\n' + docstring)
+
+    if leading_spaces:
+        return (' ' * leading_spaces) + docstring
+
+    return ('\t' * leading_tabs) + docstring
+
+
+# This sentinel indicates a configuration value of a property has not been set
+# It is only for internal use as all configurations must have a defined value
+# either by a kwargs during construction or because it has a default value.
+CONFIG_UNSET = object()
+
+
 class Config:
+
+    def __init__(self, valid_values=(), valid_types=(), check_func=None, default=CONFIG_UNSET, doc=''):
+        self.__valid_values = valid_values
+        self.__valid_types = valid_types
+        self.__check_func = check_func
+        self.__default = default
+        self.__doc__ = doc
+
+    def _check_value(self, value, name):
+        if self.__valid_values and value not in self.__valid_values:
+            raise ValueError('%r is not a valid value for %s. Should be in %r' %
+                             (value, name, self.__valid_values))
+
+        if self.__valid_types and not isinstance(value, self.__valid_types):
+            raise TypeError('%r is not a valid type for %s. Should be in %r' %
+                            (value, name, self.__valid_types))
+
+        if self.__check_func:
+            try:
+                ok = self.__check_func(value)
+            except Exception as e:
+                raise ValueError('The value provided for %s does not pass the check function: %s' % (name, e))
+            if not ok:
+                raise ValueError('The value provided for %s does not pass the check function')
+
+    def _common(self, owner, name):
+
+        if owner._config_template is None:
+            owner._config_template = {name: self.__default}
+        else:
+            owner._config_template[name] = self.__default
+
+        def _get(selfie):
+            return selfie.config_get(None, name)
+
+        def _set(selfie, value):
+            self._check_value(value, name)
+            return selfie.config_set(None, name, value)
+
+        setattr(owner, name, property(_get, _set))
 
     def __set_name__(self, owner, name):
         from .props import NamedProperty
         from .methods import NamedMethod
         require_any(self, owner, name, NamedProperty, NamedMethod)
-        if owner._config_keys is None:
-            owner._config_keys = set()
 
-        owner._config_keys.add(name)
-
-        def _get(selfie):
-            return selfie.config_get(None, name)
-
-        def _set(selfie, value):
-            return selfie.config_set(None, name, value)
-
-        setattr(owner, name, property(_get, _set))
+        self._common(owner, name)
 
 
-class InstanceConfig:
+class InstanceConfig(Config):
 
     def __set_name__(self, owner, name):
         from .props import InstanceConfigurableProperty
         from .methods import InstanceConfigurableMethod
         require_any(self, owner, name, InstanceConfigurableProperty, InstanceConfigurableMethod)
-        if owner._config_keys is None:
-            owner._config_keys = set()
 
-        owner._config_keys.add(name)
-
-        def _get(selfie):
-            return selfie.config_get(None, name)
-
-        def _set(selfie, value):
-            return selfie.config_set(None, name, value)
+        self._common(owner, name)
 
         def _iget(selfie, instance):
             return selfie.config_get(instance, name)
 
         def _iset(selfie, instance, value):
+            self._check_value(value, name)
             return selfie.config_set(instance, name, value)
 
-        setattr(owner, name, property(_get, _set))
         setattr(owner, name + '_iget', _iget)
         setattr(owner, name + '_iset', _iset)
-
-
-
 
 

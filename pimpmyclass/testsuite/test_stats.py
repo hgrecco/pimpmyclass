@@ -5,7 +5,7 @@ import unittest
 import statistics as stats
 import random
 
-from pimpmyclass.stats import RunningStats
+from pimpmyclass.stats import RunningStats, stats as calc_stats
 
 
 class StatsTest(unittest.TestCase):
@@ -34,6 +34,11 @@ class StatsTest(unittest.TestCase):
                 self.assertAlmostEqual(s.min, min(values[:ndx]))
                 self.assertAlmostEqual(s.max, max(values[:ndx]))
 
+    def test_wrong_attribute(self):
+        rs = RunningStats()
+        with self.assertRaises(AttributeError):
+            out = rs.non_existing_attr
+
     def test_failed(self):
         rs = RunningStats()
         with rs.time('test'):
@@ -53,3 +58,7 @@ class StatsTest(unittest.TestCase):
             x = 0
         self.assertNotEqual(rs.stats('test'), (0, ) * 6)
         self.assertEqual(rs.stats('other'), (0, ) * 6)
+
+    def test_empty_calc(self):
+        rs = RunningStats()
+        self.assertEqual(calc_stats(rs.stats('test')), (0, ) * 6)

@@ -13,6 +13,8 @@ from concurrent import futures
 import logging
 import threading
 
+from . import helpers
+
 
 class StorageMixin:
     """Mixin class to be inherited by a class that uses a StorageProperty.
@@ -242,7 +244,7 @@ class AsyncMixin(LockMixin):
             return self._async_submit_by_name(func.name, *args, **kwargs)
 
         async_func = async_func
-        async_func.__doc__ = '(Async) ' + func.__doc__ if func.__doc__ else ''
+        async_func.__doc__ = helpers.prepend_to_docstring('(Async) ', func.__doc__)
         setattr(cls, func.name + '_async', async_func)
         return async_func
 

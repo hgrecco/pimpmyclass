@@ -3,7 +3,7 @@
 import unittest
 import logging
 
-from pimpmyclass import mixins, props
+from pimpmyclass import mixins, props, helpers
 
 
 class MemHandler(logging.Handler):
@@ -313,7 +313,7 @@ class TestOtherProperties(unittest.TestCase):
             def prop(self):
                 return self._value
 
-            @prop
+            @prop.setter
             def prop(self, value):
                 self._value = value
 
@@ -359,3 +359,168 @@ class TestOtherProperties(unittest.TestCase):
         x._prop_gs = 0
         x.prop_gs = 9
         self.assertEqual(x.prop_gs, 0)
+
+    def test_config(self):
+
+        class MyProp(props.NamedProperty):
+
+            cfg = helpers.Config()
+
+        class Dummy:
+
+            @MyProp(cfg=1)
+            def prop(self):
+                return None
+
+        self.assertEqual(Dummy.prop._config, dict(cfg=1))
+        self.assertEqual(Dummy.prop.kwargs, dict(cfg=1))
+
+    def test_config_missing(self):
+
+        class MyProp(props.NamedProperty):
+
+            cfg = helpers.Config()
+
+        with self.assertRaises(TypeError):
+            class Dummy:
+
+                @MyProp()
+                def prop(self):
+                    return None
+
+    def test_config_wrong1(self):
+
+        class MyProp(props.NamedProperty):
+            pass
+
+        with self.assertRaises(TypeError):
+            class Dummy:
+
+                @MyProp(cfg2=20)
+                def prop(self):
+                    return None
+
+    def test_config_wrong2(self):
+
+        class MyProp(props.NamedProperty):
+
+            cfg = helpers.Config()
+
+        with self.assertRaises(TypeError):
+            class Dummy:
+
+                @MyProp(cfg2=20)
+                def prop(self):
+                    return None
+
+    def test_config_default(self):
+
+        class MyProp(props.NamedProperty):
+
+            cfg = helpers.Config(default=42)
+
+        class Dummy:
+
+            @MyProp()
+            def prop(self):
+                return None
+
+        self.assertEqual(Dummy.prop._config, dict(cfg=42))
+        self.assertEqual(dict(Dummy.prop.config_iter(None)), dict(cfg=42))
+        self.assertEqual(Dummy.prop.kwargs, {})
+
+    def test_config_default_changed(self):
+
+        class MyProp(props.NamedProperty):
+
+            cfg = helpers.Config(default=42)
+
+        class Dummy:
+
+            @MyProp(cfg=43)
+            def prop(self):
+                return None
+
+        self.assertEqual(Dummy.prop._config, dict(cfg=43))
+        self.assertEqual(Dummy.prop.kwargs, dict(cfg=43))
+
+    def test_config_values(self):
+
+        class MyProp(props.NamedProperty):
+
+            cfg = helpers.Config(valid_values=(True, False))
+
+        class Dummy:
+
+            @MyProp(cfg=True)
+            def prop(self):
+                return None
+
+        with self.assertRaises(ValueError):
+            class Dummy:
+
+                @MyProp(cfg=42)
+                def prop(self):
+                    return None
+
+    def test_config_types(self):
+
+        class MyProp(props.NamedProperty):
+
+            cfg = helpers.Config(valid_types=(int, ))
+
+        class Dummy:
+
+            @MyProp(cfg=True)
+            def prop(self):
+                return None
+
+        with self.assertRaises(TypeError):
+            class Dummy:
+
+                @MyProp(cfg=32.2)
+                def prop(self):
+                    return None
+
+    def test_config_check_func1(self):
+
+        class MyProp(props.NamedProperty):
+
+            cfg = helpers.Config(check_func=lambda x: x == 32)
+
+        class Dummy:
+
+            @MyProp(cfg=32)
+            def prop(self):
+                return None
+
+        with self.assertRaises(ValueError):
+            class Dummy:
+
+                @MyProp(cfg=50)
+                def prop(self):
+                    return None
+
+    def test_config_check_func2(self):
+
+        def _check(x):
+            if x == 32:
+                return True
+            raise AttributeError
+
+        class MyProp(props.NamedProperty):
+
+            cfg = helpers.Config(check_func=_check)
+
+        class Dummy:
+
+            @MyProp(cfg=32)
+            def prop(self):
+                return None
+
+        with self.assertRaises(ValueError):
+            class Dummy:
+
+                @MyProp(cfg=50)
+                def prop(self):
+                    return None

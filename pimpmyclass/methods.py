@@ -1,10 +1,11 @@
 
+import copy
 from collections import defaultdict
 import functools
 import inspect
 import weakref
 
-from .helpers import require, InstanceConfig, keep_if_not
+from .helpers import require, InstanceConfig, keep_if_not, CONFIG_UNSET
 from .mixins import LockMixin, LogMixin, StorageMixin, BaseLogMixin
 from .stats import RunningStats
 
@@ -13,25 +14,30 @@ class NamedMethod:
 
     _func = None
 
-    _config_keys = None
     _config = None
-    _config_unset_value = None
+    _config_template = None
 
     def __init__(self, **kwargs):
         self.kwargs = {}
 
-        self._config = {}
-
-        if self._config_keys:
-            for k in self._config_keys:
+        self._config = copy.copy(self._config_template)
+        if self._config:
+            for k in self._config.keys():
                 if k in kwargs:
-                    self._config[k] = kwargs.pop(k)
+                    v = kwargs.pop(k)
+                    setattr(self, k, v)
+                    self.kwargs[k] = v
 
-            if kwargs:
-                raise TypeError("%s() got an unexpected keyword argument '%s'" %
-                                (self.__class__.__name__, list(kwargs.keys())[0]))
+        if kwargs:
+            raise TypeError("%s() got an unexpected keyword argument '%s'" %
+                            (self.__class__.__name__, list(kwargs.keys())[0]))
 
-        self.kwargs = dict(self._config)
+        if self._config:
+            missing = tuple(k for k, v in self._config.items() if v is CONFIG_UNSET)
+            if missing:
+                raise TypeError("%s() is missing %d positional argument%s: %s" %
+                                (self.__class__.__name__, len(missing),
+                                 's' if len(missing) > 1 else '', ','.join(missing)))
 
     @property
     def name(self):
@@ -56,7 +62,7 @@ class NamedMethod:
         self._func = func
 
         self.__doc__ = func.__doc__
-        
+
         class NewCallable:
 
             def __get__(selfie, instance, owner=None):
@@ -91,6 +97,19 @@ class NamedMethod:
 
     def raw_call(self, instance, *args, **kwargs):
         return self._func(instance, *args, **kwargs)
+
+    def config_get(self, instance, key):
+        return self._config[key]
+
+    def config_set(self, instance, key, value):
+        self._config[key] = value
+
+    def config_iter(self, instance):
+        for key in self._config.keys():
+            yield key, self.config_get(instance, key)
+
+    def on_config_set(self, instance, key, value):
+        pass
 
 
 class LockMethod(NamedMethod):
@@ -310,44 +329,23 @@ class InstanceConfigurableMethod(StorageMethod):
     _storage_ns = 'iconfigm'
     _storage_ns_init = lambda _: defaultdict(dict)
 
-    _instance_config_keys = None
-
-    def __init__(self, *args, **kwargs):
-
-        tmp = {}
-
-        if self._instance_config_keys:
-            for k in self._config_keys:
-                if k in kwargs:
-                    tmp = kwargs.pop(k)
-
-        super().__init__(*args, **kwargs)
-
-        self.kwargs.update(tmp)
-
     def config_get(self, instance, key):
 
         if instance is None:
-            return self._config.get(key, self._config_unset_value)
+            return super().config_get(None, key)
+
         try:
             return InstanceConfigurableMethod._store_get(self, instance)[key]
         except KeyError:
-            return self._config.get(key, None)
+            return super().config_get(None, key)
 
     def config_set(self, instance, key, value):
         if instance is None:
-            self._config[key] = value
+            super().config_set(None, key, value)
         else:
             InstanceConfigurableMethod._store_get(self, instance)[key] = value
 
         self.on_config_set(instance, key, value)
-
-    def config_iter(self, instance):
-        for key in self._config.keys():
-            yield key, self.config_get(instance, key)
-
-    def on_config_set(self, instance, key, value):
-        pass
 
 
 class TransformMethod(InstanceConfigurableMethod):
@@ -356,7 +354,7 @@ class TransformMethod(InstanceConfigurableMethod):
     _storage_ns = 'transformationsm'
     _storage_ns_init = lambda _: defaultdict(dict)
 
-    params = InstanceConfig()
+    params = InstanceConfig(default=None)
 
     def __set_name__(self, owner, name):
         require(self, owner, name, StorageMixin, BaseLogMixin)
