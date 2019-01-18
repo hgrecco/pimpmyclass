@@ -17,3 +17,7 @@ MANIFEST
 tags
 
 test/
+
+cover
+.coverage
+htmlcov
