@@ -2,7 +2,7 @@
 import unittest
 import logging
 
-from pimpmyclass import mixins, methods
+from pimpmyclass import mixins, methods, helpers
 
 
 class MemHandler(logging.Handler):
@@ -116,3 +116,171 @@ class TestMethods(unittest.TestCase):
                                        "method returned 3 <class 'int'>",
                                        """Calling method2 with (("3 <class 'int'>",), {}))""",
                                        "method2 returned 9 <class 'int'>"])
+
+
+class TestPropertyConfig(unittest.TestCase):
+
+    def test_config(self):
+
+        class MyMethod(methods.NamedMethod):
+
+            cfg = helpers.Config()
+
+        class Dummy:
+
+            @MyMethod(cfg=1)
+            def prop(self):
+                return None
+
+        self.assertEqual(Dummy.prop._config, dict(cfg=1))
+        self.assertEqual(Dummy.prop.kwargs, dict(cfg=1))
+
+    def test_config_missing(self):
+
+        class MyMethod(methods.NamedMethod):
+
+            cfg = helpers.Config()
+
+        with self.assertRaises(TypeError):
+            class Dummy:
+
+                @MyMethod()
+                def prop(self):
+                    return None
+
+    def test_config_wrong1(self):
+
+        class MyMethod(methods.NamedMethod):
+            pass
+
+        with self.assertRaises(TypeError):
+            class Dummy:
+
+                @MyMethod(cfg2=20)
+                def prop(self):
+                    return None
+
+    def test_config_wrong2(self):
+
+        class MyMethod(methods.NamedMethod):
+
+            cfg = helpers.Config()
+
+        with self.assertRaises(TypeError):
+            class Dummy:
+
+                @MyMethod(cfg2=20)
+                def prop(self):
+                    return None
+
+    def test_config_default(self):
+
+        class MyMethod(methods.NamedMethod):
+
+            cfg = helpers.Config(default=42)
+
+        class Dummy:
+
+            @MyMethod()
+            def prop(self):
+                return None
+
+        self.assertEqual(Dummy.prop._config, dict(cfg=42))
+        self.assertEqual(dict(Dummy.prop.config_iter(None)), dict(cfg=42))
+        self.assertEqual(Dummy.prop.kwargs, {})
+
+    def test_config_default_changed(self):
+
+        class MyMethod(methods.NamedMethod):
+
+            cfg = helpers.Config(default=42)
+
+        class Dummy:
+
+            @MyMethod(cfg=43)
+            def prop(self):
+                return None
+
+        self.assertEqual(Dummy.prop._config, dict(cfg=43))
+        self.assertEqual(Dummy.prop.kwargs, dict(cfg=43))
+
+    def test_config_values(self):
+
+        class MyMethod(methods.NamedMethod):
+
+            cfg = helpers.Config(valid_values=(True, False))
+
+        class Dummy:
+
+            @MyMethod(cfg=True)
+            def prop(self):
+                return None
+
+        with self.assertRaises(ValueError):
+            class Dummy:
+
+                @MyMethod(cfg=42)
+                def prop(self):
+                    return None
+
+    def test_config_types(self):
+
+        class MyMethod(methods.NamedMethod):
+
+            cfg = helpers.Config(valid_types=(int, ))
+
+        class Dummy:
+
+            @MyMethod(cfg=True)
+            def prop(self):
+                return None
+
+        with self.assertRaises(TypeError):
+            class Dummy:
+
+                @MyMethod(cfg=32.2)
+                def prop(self):
+                    return None
+
+    def test_config_check_func1(self):
+
+        class MyMethod(methods.NamedMethod):
+
+            cfg = helpers.Config(check_func=lambda x: x == 32)
+
+        class Dummy:
+
+            @MyMethod(cfg=32)
+            def prop(self):
+                return None
+
+        with self.assertRaises(ValueError):
+            class Dummy:
+
+                @MyMethod(cfg=50)
+                def prop(self):
+                    return None
+
+    def test_config_check_func2(self):
+
+        def _check(x):
+            if x == 32:
+                return True
+            raise AttributeError
+
+        class MyMethod(methods.NamedMethod):
+
+            cfg = helpers.Config(check_func=_check)
+
+        class Dummy:
+
+            @MyMethod(cfg=32)
+            def prop(self):
+                return None
+
+        with self.assertRaises(ValueError):
+            class Dummy:
+
+                @MyMethod(cfg=50)
+                def prop(self):
+                    return None

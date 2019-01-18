@@ -360,6 +360,9 @@ class TestOtherProperties(unittest.TestCase):
         x.prop_gs = 9
         self.assertEqual(x.prop_gs, 0)
 
+
+class TestPropertyConfig(unittest.TestCase):
+
     def test_config(self):
 
         class MyProp(props.NamedProperty):
