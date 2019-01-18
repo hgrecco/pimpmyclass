@@ -312,10 +312,6 @@ class StatsMethod(StorageMethod):
     _storage_ns = 'statsm'
     _storage_ns_init = lambda _: defaultdict(RunningStats)
 
-    def __set_name__(self, owner, name):
-        require(self, owner, name, LogMixin)
-        super().__set_name__(owner, name)
-
     def call(self, instance, *args, **kwargs):
         with StatsMethod._store_get(self, instance).time('call'):
             return super().call(instance, *args, **kwargs)
