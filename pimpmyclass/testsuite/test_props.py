@@ -539,3 +539,146 @@ class TestPropertyConfig(unittest.TestCase):
                 @MyProp(cfg=50)
                 def prop(self):
                     return None
+
+
+class TestDocs(unittest.TestCase):
+
+    def assertDocEqual(self, doc1, doc2):
+        if doc1 is None or doc2 is None:
+            self.assertEqual(doc1, doc2)
+
+        doc1 = '\n'.join(d.strip() for d in doc1.split('\n') if d.strip())
+        doc2 = '\n'.join(d.strip() for d in doc2.split('\n') if d.strip())
+        self.assertEqual(doc1, doc2)
+
+    def test_empty(self):
+
+        def correct():
+            """
+            Inherited parameters
+            --------------------
+            cfg
+            """
+
+        class MyProp(props.NamedProperty):
+
+            cfg = helpers.Config()
+
+        self.assertDocEqual(MyProp.fulldoc(), correct.__doc__)
+
+
+    def test_non_empty(self):
+
+        def correct():
+            """test
+
+            Inherited parameters
+            --------------------
+            cfg
+            """
+
+        class MyProp(props.NamedProperty):
+            """test
+
+            """
+
+            cfg = helpers.Config()
+
+        self.assertDocEqual(MyProp.fulldoc(), correct.__doc__)
+
+    def test_default(self):
+
+        def correct():
+            """test
+
+            Inherited parameters
+            --------------------
+            cfg : (default=1)
+            """
+
+        class MyProp(props.NamedProperty):
+            """test
+
+            """
+
+            cfg = helpers.Config(default=1)
+
+        self.assertDocEqual(MyProp.fulldoc(), correct.__doc__)
+
+    def test_values(self):
+
+        def correct():
+            """test
+
+            Inherited parameters
+            --------------------
+            cfg : True or False
+            """
+
+        class MyProp(props.NamedProperty):
+            """test
+
+            """
+
+            cfg = helpers.Config(valid_values=(True, False))
+
+        self.assertDocEqual(MyProp.fulldoc(), correct.__doc__)
+
+    def test_types(self):
+
+        def correct():
+            """test
+
+            Inherited parameters
+            --------------------
+            cfg : int or float
+            """
+
+        class MyProp(props.NamedProperty):
+            """test
+
+            """
+
+            cfg = helpers.Config(valid_types=(int, float))
+
+        self.assertDocEqual(MyProp.fulldoc(), correct.__doc__)
+
+    def test_doc(self):
+
+        def correct():
+            """test
+
+            Inherited parameters
+            --------------------
+            cfg
+                testing 123
+            """
+
+        class MyProp(props.NamedProperty):
+            """test
+
+            """
+
+            cfg = helpers.Config(doc='testing 123')
+
+        self.assertDocEqual(MyProp.fulldoc(), correct.__doc__)
+
+    def test_all(self):
+
+        def correct():
+            """test
+
+            Inherited parameters
+            --------------------
+            cfg : True or False (default=True)
+                testing 123
+            """
+
+        class MyProp(props.NamedProperty):
+            """test
+
+            """
+
+            cfg = helpers.Config(valid_values=(True, False), doc='testing 123', default=True)
+
+        self.assertDocEqual(MyProp.fulldoc(), correct.__doc__)

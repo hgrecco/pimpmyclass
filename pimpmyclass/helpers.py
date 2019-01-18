@@ -1,5 +1,6 @@
 
 from collections import UserDict, namedtuple
+import textwrap
 
 
 class DictPropertyNameKey(namedtuple('DictPropertyNameKey', 'name key')):
@@ -127,22 +128,33 @@ def guess_indent(text, skip_first=False):
         return ''
 
 
-def prepend_to_docstring(s, docstring):
+def prepend_to_docstring(s, docstring, mixed_fallback=None):
     if not docstring:
         return s
 
-    return guess_indent(docstring, False) + s + docstring
+    try:
+        indent = guess_indent(docstring, False)
+    except ValueError:
+        if mixed_fallback is None:
+            raise
+        indent = mixed_fallback
+
+    return indent + s + docstring
 
 
-def append_lines_to_docstring(lines, docstring):
+def append_lines_to_docstring(lines, docstring, mixed_fallback=None):
     if not docstring:
         return '\n'.join(lines)
 
-    indent = guess_indent(docstring, True)
+    try:
+        indent = guess_indent(docstring, True)
+    except ValueError:
+        if mixed_fallback is None:
+            raise
+        indent = mixed_fallback
+
     out = docstring
-    if lines[-1].strip():
-        #out += '\n'
-        pass
+
     for line in lines:
         if line:
             out += indent + line + '\n'
@@ -160,24 +172,24 @@ CONFIG_UNSET = object()
 class Config:
 
     def __init__(self, valid_values=(), valid_types=(), check_func=None, default=CONFIG_UNSET, doc=''):
-        self.__valid_values = valid_values
-        self.__valid_types = valid_types
-        self.__check_func = check_func
-        self.__default = default
+        self.valid_values = valid_values
+        self.valid_types = valid_types
+        self.check_func = check_func
+        self.default = default
         self.__doc__ = doc
 
     def _check_value(self, value, name):
-        if self.__valid_values and value not in self.__valid_values:
+        if self.valid_values and value not in self.valid_values:
             raise ValueError('%r is not a valid value for %s. Should be in %r' %
-                             (value, name, self.__valid_values))
+                             (value, name, self.valid_values))
 
-        if self.__valid_types and not isinstance(value, self.__valid_types):
+        if self.valid_types and not isinstance(value, self.valid_types):
             raise TypeError('%r is not a valid type for %s. Should be in %r' %
-                            (value, name, self.__valid_types))
+                            (value, name, self.valid_types))
 
-        if self.__check_func:
+        if self.check_func:
             try:
-                ok = self.__check_func(value)
+                ok = self.check_func(value)
             except Exception as e:
                 raise ValueError('The value provided for %s does not pass the check function: %s' % (name, e))
             if not ok:
@@ -185,10 +197,10 @@ class Config:
 
     def _common(self, owner, name):
 
-        if owner._config_template is None:
-            owner._config_template = {name: self.__default}
+        if owner._config_objects is None:
+            owner._config_objects = {name: self}
         else:
-            owner._config_template[name] = self.__default
+            owner._config_objects[name] = self
 
         def _get(selfie):
             return selfie.config_get(None, name)

@@ -1,12 +1,11 @@
 
 
-import copy
 from collections import defaultdict
 import functools as ft
 import inspect
 import weakref
 
-from .helpers import missingdict, require, DictPropertyNameKey, InstanceConfig, CONFIG_UNSET
+from .helpers import missingdict, require, DictPropertyNameKey, InstanceConfig, CONFIG_UNSET, append_lines_to_docstring
 from .stats import RunningStats
 from .mixins import StorageMixin, BaseLogMixin, LockMixin, CacheMixin, ObservableMixin
 
@@ -21,19 +20,20 @@ class NamedProperty:
     kwargs = None
 
     _config = None
-    _config_template = None
+    _config_objects = None
 
     def __init__(self, fget=None, fset=None, fdel=None, doc=None, **kwargs):
         self.fget = fget
         self.fset = fset
         self.fdel = fdel
         if doc is None and fget is not None:
-            doc = fget.__doc__
-        self.__doc__ = doc
+            self.__doc__ = fget.__doc__
+        elif doc is not None:
+            self.__doc__ = doc
 
         self.kwargs = {}
 
-        self._config = copy.copy(self._config_template)
+        self._config = {name: obj.default for name, obj in self._config_objects.items()}
         if self._config:
             for k in self._config.keys():
                 if k in kwargs:
@@ -54,6 +54,44 @@ class NamedProperty:
 
     def __set_name__(self, owner, name):
         self.name = name
+
+    @classmethod
+    def fulldoc(cls):
+        if not cls._config_objects:
+            return cls.__doc__
+
+        doc = cls.__doc__ or ''
+
+        lines = ['Inherited parameters',
+                 '--------------------']
+
+        for name, obj in cls._config_objects.items():
+            desc = []
+            if obj.valid_values:
+                desc.append(' or '.join(repr(el) for el in obj.valid_values))
+            if obj.valid_types:
+                desc.append(' or '.join(el.__name__ for el in obj.valid_types))
+            if obj.check_func:
+                desc.append(' Note: checking function')
+
+            if desc:
+                desc = ' and '.join(desc)
+            else:
+                desc = ''
+            if obj.default is not CONFIG_UNSET:
+                if desc:
+                    desc += ' '
+                desc += '(default=%r)' % obj.default
+
+            if desc:
+                lines.append('%s : %s' % (name, desc))
+            else:
+                lines.append(name)
+
+            if obj.__doc__:
+                lines.append('    ' + obj.__doc__)
+
+        return append_lines_to_docstring(lines, doc, mixed_fallback='')
 
     def __call__(self, func):
         if self.fget is None:
@@ -101,15 +139,15 @@ class NamedProperty:
         return self.fdel(instance)
 
     def getter(self, fget):
-        return type(self)(fget, self.fset, self.fdel, self.__doc__,
+        return type(self)(fget, self.fset, self.fdel, self.doc,
                           **getattr(self, 'kwargs') or {})
 
     def setter(self, fset):
-        return type(self)(self.fget, fset, self.fdel, self.__doc__,
+        return type(self)(self.fget, fset, self.fdel, self.doc,
                           **getattr(self, 'kwargs') or {})
 
     def deleter(self, fdel):
-        return type(self)(self.fget, self.fset, fdel, self.__doc__,
+        return type(self)(self.fget, self.fset, fdel, self.doc,
                           **getattr(self, 'kwargs') or {})
 
     def config_get(self, instance, key):

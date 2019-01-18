@@ -3,8 +3,7 @@
 import unittest
 import logging
 
-from pimpmyclass import mixins, methods, helpers
-
+from pimpmyclass import helpers
 
 class TestDoc(unittest.TestCase):
 
@@ -28,7 +27,7 @@ class TestDoc(unittest.TestCase):
             s3 = "\t\t\thello\n word\n \n\t\t\t   !"
             out = helpers.guess_indent(s3)
 
-    def test_docstring(self):
+    def test_append_prepend(self):
 
         def f():
             """This is a function
@@ -46,13 +45,12 @@ class TestDoc(unittest.TestCase):
             """This is a function
 
             And here is the rest
-            
+
             a = 1
             b = 2
             """
 
-        print()
-        print(repr(helpers.append_lines_to_docstring(['', 'a = 1', 'b = 2'], f.__doc__)))
-        print(repr(fa.__doc__))
         self.assertEqual(helpers.prepend_to_docstring('Async ', f.__doc__), fp.__doc__)
         self.assertEqual(helpers.append_lines_to_docstring(['', 'a = 1', 'b = 2'], f.__doc__), fa.__doc__)
+
+

@@ -5,7 +5,7 @@ import functools
 import inspect
 import weakref
 
-from .helpers import require, InstanceConfig, keep_if_not, CONFIG_UNSET
+from .helpers import require, InstanceConfig, keep_if_not, CONFIG_UNSET, append_lines_to_docstring
 from .mixins import LockMixin, LogMixin, StorageMixin, BaseLogMixin
 from .stats import RunningStats
 
@@ -15,12 +15,12 @@ class NamedMethod:
     _func = None
 
     _config = None
-    _config_template = None
+    _config_objects = None
 
     def __init__(self, **kwargs):
         self.kwargs = {}
 
-        self._config = copy.copy(self._config_template)
+        self._config = {name: obj.default for name, obj in self._config_objects.items()}
         if self._config:
             for k in self._config.keys():
                 if k in kwargs:
@@ -38,6 +38,45 @@ class NamedMethod:
                 raise TypeError("%s() is missing %d positional argument%s: %s" %
                                 (self.__class__.__name__, len(missing),
                                  's' if len(missing) > 1 else '', ','.join(missing)))
+
+
+    @classmethod
+    def fulldoc(cls):
+        if not cls._config_objects:
+            return cls.__doc__
+
+        doc = cls.__doc__ or ''
+
+        lines = ['Inherited parameters',
+                 '--------------------']
+
+        for name, obj in cls._config_objects.items():
+            desc = []
+            if obj.valid_values:
+                desc.append(' or '.join(repr(el) for el in obj.valid_values))
+            if obj.valid_types:
+                desc.append(' or '.join(el.__name__ for el in obj.valid_types))
+            if obj.check_func:
+                desc.append(' Note: checking function')
+
+            if desc:
+                desc = ' and '.join(desc)
+            else:
+                desc = ''
+            if obj.default is not CONFIG_UNSET:
+                if desc:
+                    desc += ' '
+                desc += '(default=%r)' % obj.default
+
+            if desc:
+                lines.append('%s : %s' % (name, desc))
+            else:
+                lines.append(name)
+
+            if obj.__doc__:
+                lines.append('    ' + obj.__doc__)
+
+        return append_lines_to_docstring(lines, doc, mixed_fallback='')
 
     @property
     def name(self):
