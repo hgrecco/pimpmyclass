@@ -7,6 +7,14 @@ from pimpmyclass import helpers
 
 class TestDoc(unittest.TestCase):
 
+    def assertDocEqual(self, doc1, doc2):
+        if doc1 is None or doc2 is None:
+            self.assertEqual(doc1, doc2)
+
+        doc1 = '\n'.join(d.strip() for d in doc1.split('\n') if d.strip())
+        doc2 = '\n'.join(d.strip() for d in doc2.split('\n') if d.strip())
+        self.assertEqual(doc1, doc2)
+
     def test_indent_spaces(self):
         s4 = "    hello\n    word\n \n    !"
         self.assertEqual(helpers.guess_indent(s4), 4 * ' ')
@@ -50,7 +58,7 @@ class TestDoc(unittest.TestCase):
             b = 2
             """
 
-        self.assertEqual(helpers.prepend_to_docstring('Async ', f.__doc__), fp.__doc__)
-        self.assertEqual(helpers.append_lines_to_docstring(['', 'a = 1', 'b = 2'], f.__doc__), fa.__doc__)
+        self.assertDocEqual(helpers.prepend_to_docstring('Async ', f.__doc__), fp.__doc__)
+        self.assertDocEqual(helpers.append_lines_to_docstring(['', 'a = 1', 'b = 2'], f.__doc__), fa.__doc__)
 
 

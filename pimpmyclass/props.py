@@ -33,8 +33,9 @@ class NamedProperty:
 
         self.kwargs = {}
 
-        self._config = {name: obj.default for name, obj in self._config_objects.items()}
-        if self._config:
+        if self._config_objects:
+            self._config = {name: obj.default for name, obj in self._config_objects.items()}
+
             for k in self._config.keys():
                 if k in kwargs:
                     v = kwargs.pop(k)
@@ -139,15 +140,15 @@ class NamedProperty:
         return self.fdel(instance)
 
     def getter(self, fget):
-        return type(self)(fget, self.fset, self.fdel, self.doc,
+        return type(self)(fget, self.fset, self.fdel, self.__doc__,
                           **getattr(self, 'kwargs') or {})
 
     def setter(self, fset):
-        return type(self)(self.fget, fset, self.fdel, self.doc,
+        return type(self)(self.fget, fset, self.fdel, self.__doc__,
                           **getattr(self, 'kwargs') or {})
 
     def deleter(self, fdel):
-        return type(self)(self.fget, self.fset, fdel, self.doc,
+        return type(self)(self.fget, self.fset, fdel, self.__doc__,
                           **getattr(self, 'kwargs') or {})
 
     def config_get(self, instance, key):

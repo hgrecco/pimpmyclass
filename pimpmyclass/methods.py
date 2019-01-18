@@ -20,8 +20,9 @@ class NamedMethod:
     def __init__(self, **kwargs):
         self.kwargs = {}
 
-        self._config = {name: obj.default for name, obj in self._config_objects.items()}
-        if self._config:
+        if self._config_objects:
+            self._config = {name: obj.default for name, obj in self._config_objects.items()}
+
             for k in self._config.keys():
                 if k in kwargs:
                     v = kwargs.pop(k)
