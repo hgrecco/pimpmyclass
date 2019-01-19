@@ -28,12 +28,46 @@ and also methods!
 
 Each capability is isolated in individual classes allowing you to pick only what you need.
 
+Follow us on GitHub: https://github.com/hgrecco/pimpmyclass
+
 Basic usage
 -----------
 
-Pick
-https://github.com/hgrecco/pimpmyclass
+Pick what capability you need and created your pimped property
 
+.. code-block:: python
+
+   from pimpmyclass import props
+
+   class MyAwesomeProperty(props.StatsProperty):
+      """Docs goes here
+      """
+
+Check what is required for that class and define your base class
+with your properties.
+
+.. code-block:: python
+
+   from pimpmyclass import mixins
+
+   class Base(mixins.StorageMixin)
+       """Docs goes here
+       """
+
+       @MyAwesomeProperty()
+       def just_read(self):
+           return 42
+
+       @MyAwesomeProperty()
+       def read_write(self):
+           return 42
+
+       @read_write.setter
+       def read_write(self, value):
+           if value != 42:
+               raise ValueError
+
+and that's it!
 
 .. toctree::
    :maxdepth: 2
