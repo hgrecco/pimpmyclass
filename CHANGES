@@ -2,7 +2,7 @@ pimpmyclass changelog
 =====================
 
 
-0.4 (unreleased)
+0.4 (2019-01-19)
 ----------------
 
 - Renamed Config to InstanceConfig and implemented Config for instance
