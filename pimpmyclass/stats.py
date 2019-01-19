@@ -16,9 +16,14 @@ from collections import namedtuple
 from contextlib import contextmanager
 from time import perf_counter
 
-#: Data structure
-Stats = namedtuple('Stats', 'last count mean std min max')
 
+#: Data structure
+class Stats(namedtuple('Stats', 'last count mean std min max')):
+
+    def __str__(self):
+        return 'Stats (hits: %d)' % self.count
+
+    __repr__ = __str__
 
 def stats(state):
     """Return the statistics for given state.

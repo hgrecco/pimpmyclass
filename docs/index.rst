@@ -50,7 +50,7 @@ with your properties.
 
    from pimpmyclass import mixins
 
-   class Base(mixins.StorageMixin)
+   class Base(mixins.StorageMixin):
        """Docs goes here
        """
 
@@ -68,6 +68,29 @@ with your properties.
                raise ValueError
 
 and that's it!
+
+.. code-block:: python
+
+   >>> obj = Base()
+   >>> obj.just_read
+   42
+   >>> obj.just_read
+   42
+   >>> obj.read_write
+   42
+   >>> obj.read_write = 42
+   >>> obj.read_write = 43
+   Traceback (most recent call last):
+   ...
+   ValueError
+   >>> s = Base.just_read.stats(obj, 'get')
+   >>> s.count # number of times get was called
+   2
+   >>> s.last # duration in seconds of the last get call (you can also ask for mean, max, min, std)
+   1.414009602740407e-06
+   >>> Base.read_write.stats(obj, 'failed_set').count
+   1
+
 
 .. toctree::
    :maxdepth: 2
