@@ -40,7 +40,8 @@ from .mixins import StorageMixin, BaseLogMixin, LockMixin, CacheMixin, Observabl
 class NamedProperty(NamedCommon):
     """A property that takes the name of the class attribute to which it is assigned.
 
-    The name must be convertible to string.
+    Accepts instance of :class:`pimpmyclass.Config` as configuration values that
+    automatically get populated from kwargs.
     """
 
     def __init__(self, fget=None, fset=None, fdel=None, doc=None, **kwargs):
@@ -53,8 +54,6 @@ class NamedProperty(NamedCommon):
             self.__doc__ = fget.__doc__
         elif doc is not None:
             self.__doc__ = doc
-
-
 
     @property
     def name(self):
@@ -122,7 +121,7 @@ class StorageProperty(NamedProperty):
     """A property that can store and retrieve information in the instance
     to which is attached.
 
-    Requires that the owner class inherits StorageMixin.
+    **Requires** that the owner class inherits :class:`pimpmyclass.mixins.StorageMixin`.
 
     Notes
     -----
@@ -134,15 +133,15 @@ class StorageProperty(NamedProperty):
     Derived class should use the dynamically created _store_get and _store_set
     to retrieve and store information.
 
-    Derived classes must override the following variables:
+    .. note:: Derived classes must override the following variables:
 
-    _storage_ns : str
-        Defines a unique namespace under which the information of the
-        derived class is stored.
+        _storage_ns : str
+            Defines a unique namespace under which the information of the
+            derived class is stored.
 
-    _storage_ns_init : callable
-        Called upon initialization of the storage to initialize the
-        specific storage of the namespace.
+        _storage_ns_init : callable
+            Called upon initialization of the storage to initialize the
+            specific storage of the namespace.
 
     """
 
@@ -229,27 +228,29 @@ class StatsProperty(StorageProperty):
 
     Stats can be retrieved with the `stat` methods and
     the following keys:
+
     - get
     - set
     - failed_get
     - failed_set
 
-    The following statistics are provided in a namedtuple
-    last : float
-        most recent duration (seconds).
-    count : int
-        number of operations.
-    mean : float
-        average duration per operation (seconds).
-    std : float
-        standard deviation of the duration (seconds).
-    min : float
-        shortest duration (seconds).
-    max : float
-        longest duration (seconds).
+    The following statistics are provided in a namedtuple:
+
+        last : float
+            most recent duration (seconds).
+        count : int
+            number of operations.
+        mean : float
+            average duration per operation (seconds).
+        std : float
+            standard deviation of the duration (seconds).
+        min : float
+            shortest duration (seconds).
+        max : float
+            longest duration (seconds).
 
 
-    Requires that the owner class inherits StorageMixin.
+    **Requires** that the owner class inherits :class:`pimpmyclass.mixins.StorageMixin`.
     """
 
     _storage_ns = 'stats'
@@ -272,7 +273,7 @@ class StatsProperty(StorageProperty):
 class LogProperty(NamedProperty):
     """A property that log operations.
 
-    Requires that the owner class inherits LogMixin.
+    **Requires** that the owner class inherits :class:`pimpmyclass.mixins.LogMixin`.
     """
 
     log_values = Config(default=True)
@@ -321,7 +322,7 @@ class LogProperty(NamedProperty):
 class LockProperty(NamedProperty):
     """A property that with a set or get Lock.
 
-    Requires that the owner class inherits LogMixin.
+    **Requires** that the owner class inherits :class:`pimpmyclass.mixins.LogMixin`.
     """
 
     def __set_name__(self, owner, name):
@@ -342,7 +343,7 @@ class LockProperty(NamedProperty):
 class InstanceConfigurableProperty(StorageProperty):
     """A property that contains owner instance specific configuration variable.
 
-    Requires that the owner class inherits StorageMixin.
+    **Requires** that the owner class inherits :class:`pimpmyclass.mixins.StorageMixin`.
     """
 
     _storage_ns = 'iconfig'
@@ -371,7 +372,7 @@ class TransformProperty(InstanceConfigurableProperty):
     """A property that can transform value before a set operation
     or after a get operation.
 
-    Requires that the owner class inherits InstanceConfigurableProperty.
+    **Requires** that the owner class inherits :class:`pimpmyclass.mixins.InstanceConfigurableProperty`.
     """
 
     pre_set = InstanceConfig(default=None, check_func=lambda x: x is None or callable(x))
@@ -440,7 +441,7 @@ class CacheProperty(StorageProperty):
 class GetCacheProperty(CacheProperty):
     """A property that stores the get value in the cache.
 
-    Requires that the owner class inherits StorageMixin.
+    **Requires** that the owner class inherits :class:`pimpmyclass.mixins.StorageMixin`.
     """
 
     def get(self, instance, objtype):
@@ -455,7 +456,7 @@ class GetCacheProperty(CacheProperty):
 class SetCacheProperty(CacheProperty):
     """A property that stores the set value in the cache.
 
-    Requires that the owner class inherits StorageMixin.
+    **Requires** that the owner class inherits :class:`pimpmyclass.mixins.StorageMixin`.
     """
 
     def set(self, instance, value):
@@ -467,7 +468,7 @@ class SetCacheProperty(CacheProperty):
 class GetSetCacheProperty(GetCacheProperty, SetCacheProperty):
     """A property that stores the get or set value in the cache.
 
-    Requires that the owner class inherits StorageMixin.
+    **Requires** that the owner class inherits :class:`pimpmyclass.mixins.StorageMixin`.
     """
 
 
@@ -475,7 +476,7 @@ class PreventUnnecessarySetProperty(SetCacheProperty):
     """A property that prevents unnecessary set operations by comparing
     the value in the cache with the value to be set.
 
-    Requires that the owner class inherits CacheMixin and LogMixin.
+    **Requires** that the owner class inherits :class:`pimpmyclass.mixins.CacheMixin` and :class:`pimpmyclass.mixins.LogMixin`.
     """
 
     def set(self, instance, value):
@@ -493,6 +494,9 @@ class PreventUnnecessarySetProperty(SetCacheProperty):
 
 
 class ReadOnceProperty(InstanceConfigurableProperty, GetCacheProperty):
+    """Avoids calling the getter if the value is already in the cache.
+
+    """
 
     read_once = InstanceConfig(default=False, valid_types=(bool, ))
 
@@ -506,6 +510,8 @@ class ReadOnceProperty(InstanceConfigurableProperty, GetCacheProperty):
 class ObservableProperty(CacheProperty):
     """A property that emits a signal when the cached value is changed
     (either via set or get)
+
+    **Requires** that the owner class inherits :class:`pimpmyclass.mixins.CacheMixin` and :class:`pimpmyclass.mixins.ObservableMixin`.
     """
 
     def __set_name__(self, owner, name):

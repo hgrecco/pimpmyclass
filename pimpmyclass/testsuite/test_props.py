@@ -555,8 +555,8 @@ class TestDocs(unittest.TestCase):
 
         def correct():
             """
-            Inherited parameters
-            --------------------
+            Other parameters
+            ----------------
             cfg
             """
 
@@ -572,8 +572,8 @@ class TestDocs(unittest.TestCase):
         def correct():
             """test
 
-            Inherited parameters
-            --------------------
+            Other parameters
+            ----------------
             cfg
             """
 
@@ -591,8 +591,8 @@ class TestDocs(unittest.TestCase):
         def correct():
             """test
 
-            Inherited parameters
-            --------------------
+            Other parameters
+            ----------------
             cfg : (default=1)
             """
 
@@ -610,8 +610,8 @@ class TestDocs(unittest.TestCase):
         def correct():
             """test
 
-            Inherited parameters
-            --------------------
+            Other parameters
+            ----------------
             cfg : True or False
             """
 
@@ -629,8 +629,8 @@ class TestDocs(unittest.TestCase):
         def correct():
             """test
 
-            Inherited parameters
-            --------------------
+            Other parameters
+            ----------------
             cfg : int or float
             """
 
@@ -648,8 +648,8 @@ class TestDocs(unittest.TestCase):
         def correct():
             """test
 
-            Inherited parameters
-            --------------------
+            Other parameters
+            ----------------
             cfg
                 testing 123
             """
@@ -668,8 +668,8 @@ class TestDocs(unittest.TestCase):
         def correct():
             """test
 
-            Inherited parameters
-            --------------------
+            Other parameters
+            ----------------
             cfg : True or False (default=True)
                 testing 123
             """

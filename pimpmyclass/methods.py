@@ -171,18 +171,18 @@ class StorageMethod(NamedMethod):
     Derived class should use the dynamically created _store_get and _store_set
     to retrieve and store information.
 
-    Derived classes must override the following variables:
+    ..note: Derived classes must override the following variables:
 
-    _storage_ns : str
-        Defines a unique namespace under which the information of the
-        derived class is stored.
+        _storage_ns : str
+            Defines a unique namespace under which the information of the
+            derived class is stored.
 
-    _storage_ns_init : callable
-        Called upon initialization of the storage to initialize the
-        specific storage of the namespace.
+        _storage_ns_init : callable
+            Called upon initialization of the storage to initialize the
+            specific storage of the namespace.
 
 
-    Requires that the owner class inherits StorageMixin.
+    **Requires** that the owner class inherits :class:`pimpmyclass.mixins.StorageMixin`.
     """
 
     # Stores namespace to StorageProperty subclass
@@ -268,22 +268,23 @@ class StatsMethod(StorageMethod):
     - call
     - failed_call
 
-    The following statistics are provided in a namedtuple
-    last : float
-        most recent duration (seconds).
-    count : int
-        number of operations.
-    mean : float
-        average duration per operation (seconds).
-    std : float
-        standard deviation of the duration (seconds).
-    min : float
-        shortest duration (seconds).
-    max : float
-        longest duration (seconds).
+    The following statistics are provided in a namedtuple:
+
+        last : float
+            most recent duration (seconds).
+        count : int
+            number of operations.
+        mean : float
+            average duration per operation (seconds).
+        std : float
+            standard deviation of the duration (seconds).
+        min : float
+            shortest duration (seconds).
+        max : float
+            longest duration (seconds).
 
 
-    Requires that the owner class inherits StorageMixin.
+    **Requires** that the owner class inherits :class:`pimpmyclass.mixins.StorageMixin`.
     """
 
     _storage_ns = 'statsm'

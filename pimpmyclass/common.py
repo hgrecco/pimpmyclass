@@ -144,8 +144,10 @@ class NamedCommon(metaclass=MetaDoc):
 
         doc = doc or ''
 
-        lines = ['Inherited parameters',
-                 '--------------------']
+        lines = ['',
+                 '',
+                 'Other parameters',
+                 '----------------']
 
         for name, obj in cls._config_objects.items():
             desc = []
@@ -172,6 +174,8 @@ class NamedCommon(metaclass=MetaDoc):
 
             if obj.__doc__:
                 lines.append('    ' + obj.__doc__)
+
+        lines.append('')
 
         return append_lines_to_docstring(lines, doc, mixed_fallback='')
 
