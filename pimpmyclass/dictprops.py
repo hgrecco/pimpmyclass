@@ -15,7 +15,7 @@ class DictProperty(NamedProperty):
         self.keys = kwargs.pop('keys', None)
         super().__init__(*args, **kwargs)
 
-        self.kwargs['keys'] = self.keys
+        self._kwargs['keys'] = self.keys
         self._subproperties = {}
 
     def __get__(self, instance, owner=None):

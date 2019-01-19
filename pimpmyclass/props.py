@@ -5,7 +5,8 @@ import functools as ft
 import inspect
 import weakref
 
-from .helpers import missingdict, require, DictPropertyNameKey, InstanceConfig, NamedCommon
+from .common import NamedCommon, Config, InstanceConfig
+from .helpers import missingdict, require, DictPropertyNameKey
 from .stats import RunningStats
 from .mixins import StorageMixin, BaseLogMixin, LockMixin, CacheMixin, ObservableMixin
 
@@ -17,6 +18,7 @@ class NamedProperty(NamedCommon):
     """
 
     def __init__(self, fget=None, fset=None, fdel=None, doc=None, **kwargs):
+        super().__init__(**kwargs)
         self.fget = fget
         self.fset = fset
         self.fdel = fdel
@@ -26,7 +28,7 @@ class NamedProperty(NamedCommon):
         elif doc is not None:
             self.__doc__ = doc
 
-        super().__init__(**kwargs)
+
 
     @property
     def name(self):
@@ -79,15 +81,15 @@ class NamedProperty(NamedCommon):
 
     def getter(self, fget):
         return type(self)(fget, self.fset, self.fdel, self.__doc__,
-                          **getattr(self, 'kwargs') or {})
+                          **getattr(self, '_kwargs') or {})
 
     def setter(self, fset):
         return type(self)(self.fget, fset, self.fdel, self.__doc__,
-                          **getattr(self, 'kwargs') or {})
+                          **getattr(self, '_kwargs') or {})
 
     def deleter(self, fdel):
         return type(self)(self.fget, self.fset, fdel, self.__doc__,
-                          **getattr(self, 'kwargs') or {})
+                          **getattr(self, '_kwargs') or {})
 
 
 class StorageProperty(NamedProperty):
@@ -247,13 +249,7 @@ class LogProperty(NamedProperty):
     Requires that the owner class inherits LogMixin.
     """
 
-    log_values = True
-
-    def __init__(self, *args, **kwargs):
-        self.log_values = kwargs.pop('log_values', True)
-        super().__init__(*args, **kwargs)
-
-        self.kwargs.update({'log_values': self.log_values})
+    log_values = Config(default=True)
 
     def __set_name__(self, owner, name):
         require(self, owner, name, BaseLogMixin)

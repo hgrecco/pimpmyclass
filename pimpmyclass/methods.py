@@ -4,7 +4,8 @@ import functools
 import inspect
 import weakref
 
-from .helpers import require, InstanceConfig, CONFIG_UNSET, append_lines_to_docstring, NamedCommon
+from .common import NamedCommon, Config, InstanceConfig
+from .helpers import require
 from .mixins import LockMixin, LogMixin, StorageMixin, BaseLogMixin
 from .stats import RunningStats
 
@@ -84,11 +85,7 @@ class LockMethod(NamedMethod):
 
 class LogMethod(NamedMethod):
 
-    log_values = True
-
-    def __init__(self, *args, **kwargs):
-        self.log_values = kwargs.pop('log_values', True)
-        super().__init__(*args, **kwargs)
+    log_values = Config(default=True)
 
     def _to_log(self, instance, value):
         if self.log_values is True:

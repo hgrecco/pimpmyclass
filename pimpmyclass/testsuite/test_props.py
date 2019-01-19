@@ -3,7 +3,7 @@
 import unittest
 import logging
 
-from pimpmyclass import mixins, props, helpers
+from pimpmyclass import mixins, props, helpers, common
 
 
 class MemHandler(logging.Handler):
@@ -379,7 +379,7 @@ class TestPropertyConfig(unittest.TestCase):
 
         class MyProp(props.NamedProperty):
 
-            cfg = helpers.Config()
+            cfg = common.Config()
 
         class Dummy:
 
@@ -388,13 +388,13 @@ class TestPropertyConfig(unittest.TestCase):
                 return None
 
         self.assertEqual(Dummy.prop._config, dict(cfg=1))
-        self.assertEqual(Dummy.prop.kwargs, dict(cfg=1))
+        self.assertEqual(Dummy.prop._kwargs, dict(cfg=1))
 
     def test_config_missing(self):
 
         class MyProp(props.NamedProperty):
 
-            cfg = helpers.Config()
+            cfg = common.Config()
 
         with self.assertRaises(TypeError):
             class Dummy:
@@ -419,7 +419,7 @@ class TestPropertyConfig(unittest.TestCase):
 
         class MyProp(props.NamedProperty):
 
-            cfg = helpers.Config()
+            cfg = common.Config()
 
         with self.assertRaises(TypeError):
             class Dummy:
@@ -432,7 +432,7 @@ class TestPropertyConfig(unittest.TestCase):
 
         class MyProp(props.NamedProperty):
 
-            cfg = helpers.Config(default=42)
+            cfg = common.Config(default=42)
 
         class Dummy:
 
@@ -442,13 +442,13 @@ class TestPropertyConfig(unittest.TestCase):
 
         self.assertEqual(Dummy.prop._config, dict(cfg=42))
         self.assertEqual(dict(Dummy.prop.config_iter(None)), dict(cfg=42))
-        self.assertEqual(Dummy.prop.kwargs, {})
+        self.assertEqual(Dummy.prop._kwargs, {})
 
     def test_config_default_changed(self):
 
         class MyProp(props.NamedProperty):
 
-            cfg = helpers.Config(default=42)
+            cfg = common.Config(default=42)
 
         class Dummy:
 
@@ -457,13 +457,13 @@ class TestPropertyConfig(unittest.TestCase):
                 return None
 
         self.assertEqual(Dummy.prop._config, dict(cfg=43))
-        self.assertEqual(Dummy.prop.kwargs, dict(cfg=43))
+        self.assertEqual(Dummy.prop._kwargs, dict(cfg=43))
 
     def test_config_values(self):
 
         class MyProp(props.NamedProperty):
 
-            cfg = helpers.Config(valid_values=(True, False))
+            cfg = common.Config(valid_values=(True, False))
 
         class Dummy:
 
@@ -482,7 +482,7 @@ class TestPropertyConfig(unittest.TestCase):
 
         class MyProp(props.NamedProperty):
 
-            cfg = helpers.Config(valid_types=(int, ))
+            cfg = common.Config(valid_types=(int, ))
 
         class Dummy:
 
@@ -501,7 +501,7 @@ class TestPropertyConfig(unittest.TestCase):
 
         class MyProp(props.NamedProperty):
 
-            cfg = helpers.Config(check_func=lambda x: x == 32)
+            cfg = common.Config(check_func=lambda x: x == 32)
 
         class Dummy:
 
@@ -525,7 +525,7 @@ class TestPropertyConfig(unittest.TestCase):
 
         class MyProp(props.NamedProperty):
 
-            cfg = helpers.Config(check_func=_check)
+            cfg = common.Config(check_func=_check)
 
         class Dummy:
 
@@ -562,7 +562,7 @@ class TestDocs(unittest.TestCase):
 
         class MyProp(props.NamedProperty):
 
-            cfg = helpers.Config()
+            cfg = common.Config()
 
         self.assertDocEqual(MyProp.fulldoc(), correct.__doc__)
 
@@ -582,7 +582,7 @@ class TestDocs(unittest.TestCase):
 
             """
 
-            cfg = helpers.Config()
+            cfg = common.Config()
 
         self.assertDocEqual(MyProp.fulldoc(), correct.__doc__)
 
@@ -601,7 +601,7 @@ class TestDocs(unittest.TestCase):
 
             """
 
-            cfg = helpers.Config(default=1)
+            cfg = common.Config(default=1)
 
         self.assertDocEqual(MyProp.fulldoc(), correct.__doc__)
 
@@ -620,7 +620,7 @@ class TestDocs(unittest.TestCase):
 
             """
 
-            cfg = helpers.Config(valid_values=(True, False))
+            cfg = common.Config(valid_values=(True, False))
 
         self.assertDocEqual(MyProp.fulldoc(), correct.__doc__)
 
@@ -639,7 +639,7 @@ class TestDocs(unittest.TestCase):
 
             """
 
-            cfg = helpers.Config(valid_types=(int, float))
+            cfg = common.Config(valid_types=(int, float))
 
         self.assertDocEqual(MyProp.fulldoc(), correct.__doc__)
 
@@ -659,7 +659,7 @@ class TestDocs(unittest.TestCase):
 
             """
 
-            cfg = helpers.Config(doc='testing 123')
+            cfg = common.Config(doc='testing 123')
 
         self.assertDocEqual(MyProp.fulldoc(), correct.__doc__)
 
@@ -679,6 +679,6 @@ class TestDocs(unittest.TestCase):
 
             """
 
-            cfg = helpers.Config(valid_values=(True, False), doc='testing 123', default=True)
+            cfg = common.Config(valid_values=(True, False), doc='testing 123', default=True)
 
         self.assertDocEqual(MyProp.fulldoc(), correct.__doc__)
