@@ -30,3 +30,8 @@
     :copyright: 2019 by pimpmyclass Authors, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
 """
+
+from . import props, dictprops, methods, mixins
+from .common import Config, InstanceConfig
+
+__all__ = ['props', 'dictprops', 'methods', 'mixins', 'Config', 'InstanceConfig']
