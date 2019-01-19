@@ -564,7 +564,7 @@ class TestDocs(unittest.TestCase):
 
             cfg = common.Config()
 
-        self.assertDocEqual(MyProp.fulldoc(), correct.__doc__)
+        self.assertDocEqual(MyProp.__doc__, correct.__doc__)
 
 
     def test_non_empty(self):
@@ -584,7 +584,7 @@ class TestDocs(unittest.TestCase):
 
             cfg = common.Config()
 
-        self.assertDocEqual(MyProp.fulldoc(), correct.__doc__)
+        self.assertDocEqual(MyProp.__doc__, correct.__doc__)
 
     def test_default(self):
 
@@ -603,7 +603,7 @@ class TestDocs(unittest.TestCase):
 
             cfg = common.Config(default=1)
 
-        self.assertDocEqual(MyProp.fulldoc(), correct.__doc__)
+        self.assertDocEqual(MyProp.__doc__, correct.__doc__)
 
     def test_values(self):
 
@@ -622,7 +622,7 @@ class TestDocs(unittest.TestCase):
 
             cfg = common.Config(valid_values=(True, False))
 
-        self.assertDocEqual(MyProp.fulldoc(), correct.__doc__)
+        self.assertDocEqual(MyProp.__doc__, correct.__doc__)
 
     def test_types(self):
 
@@ -641,7 +641,7 @@ class TestDocs(unittest.TestCase):
 
             cfg = common.Config(valid_types=(int, float))
 
-        self.assertDocEqual(MyProp.fulldoc(), correct.__doc__)
+        self.assertDocEqual(MyProp.__doc__, correct.__doc__)
 
     def test_doc(self):
 
@@ -661,7 +661,7 @@ class TestDocs(unittest.TestCase):
 
             cfg = common.Config(doc='testing 123')
 
-        self.assertDocEqual(MyProp.fulldoc(), correct.__doc__)
+        self.assertDocEqual(MyProp.__doc__, correct.__doc__)
 
     def test_all(self):
 
@@ -681,4 +681,4 @@ class TestDocs(unittest.TestCase):
 
             cfg = common.Config(valid_values=(True, False), doc='testing 123', default=True)
 
-        self.assertDocEqual(MyProp.fulldoc(), correct.__doc__)
+        self.assertDocEqual(MyProp.__doc__, correct.__doc__)

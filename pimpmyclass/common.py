@@ -89,7 +89,19 @@ class InstanceConfig(Config):
         setattr(owner, name + '_iset', _iset)
 
 
-class NamedCommon:
+
+class MetaDoc(type):
+
+    def __new__(cls, name, bases, attrs):
+        attrs['_doc'] = attrs.get('__doc__', '')
+        return super(MetaDoc, cls).__new__(cls, name, bases, attrs)
+
+    @property
+    def __doc__(self):
+        return self.fulldoc(self._doc)
+
+
+class NamedCommon(metaclass=MetaDoc):
 
     _name = ''
     _kwargs = None
@@ -125,11 +137,12 @@ class NamedCommon:
         self._name = name
 
     @classmethod
-    def fulldoc(cls):
-        if not cls._config_objects:
-            return cls.__doc__
+    def fulldoc(cls, doc):
 
-        doc = cls.__doc__ or ''
+        if not cls._config_objects:
+            return doc
+
+        doc = doc or ''
 
         lines = ['Inherited parameters',
                  '--------------------']
