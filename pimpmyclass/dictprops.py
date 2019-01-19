@@ -1,3 +1,16 @@
+# -*- coding: utf-8 -*-
+"""
+    pimpmyclass.dictprops
+    ~~~~~~~~~~~~~~~~~~~~~
+
+    DictProperty is a property that behaves like a dictionary.
+
+    Wrapped get methods must have one arguments: key
+    Wrapped set methods must have one arguments: key and value
+
+    :copyright: 2019 by pimpmyclass Authors, see AUTHORS for more details.
+    :license: BSD, see LICENSE for more details.
+"""
 
 import enum
 

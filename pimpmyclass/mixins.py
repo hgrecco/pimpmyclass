@@ -2,10 +2,17 @@
     pimpmyproperty.mixins
     ~~~~~~~~~~~~~~~~~~~~~
 
-    Mixins classes providing extra functionality
-    to classes with pimped properties.
+    Mixins classes providing extra functionality to classes with pimped properties and methods
 
-    :copyright: 2018 by The Lantz Authors
+    - StorageMixin: Provides an instance based storage.
+    - BaseLogMixin: Provides generic log methods.
+    - LogMixin: Provides log methods using python logging module.
+    - LockMixin: Provides an instance re-entrant lock.
+    - AsyncMixin: Provides async capabilities via a queue.
+    - CacheMixin: Provides a cache that can be accessed and invalidated.
+    - ObservableMixin: Provides signals.
+
+    :copyright: 2019 by pimpmyclass Authors, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
 """
 

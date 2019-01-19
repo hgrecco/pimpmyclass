@@ -1,3 +1,13 @@
+# -*- coding: utf-8 -*-
+"""
+    pimpmyclass.helper
+    ~~~~~~~~~~~~~~~~~~
+
+    General helper functions and classes.
+
+    :copyright: 2019 by pimpmyclass Authors, see AUTHORS for more details.
+    :license: BSD, see LICENSE for more details.
+"""
 
 from collections import UserDict, namedtuple
 

@@ -1,3 +1,13 @@
+# -*- coding: utf-8 -*-
+"""
+    pimpmyclass.commoon
+    ~~~~~~~~~~~~~~~~~~~
+
+    Provides Config, InstanceConfig and a base class for NamedProperties and Methods
+
+    :copyright: 2019 by pimpmyclass Authors, see AUTHORS for more details.
+    :license: BSD, see LICENSE for more details.
+"""
 
 
 from .helpers import append_lines_to_docstring, require_any

@@ -1,3 +1,25 @@
+# -*- coding: utf-8 -*-
+"""
+    pimpmyclass.methods
+    ~~~~~~~~~~~~~~~~~~~
+
+    Implement pimped methods:
+
+    - NamedMethod: has a name and can be configured via kwargs (see common.Config).
+    - StorageMethod: can store and retrieve information from the instance to which is attached.
+    - StatsMethod: keep stats of all calls.
+    - LogMethod: logs all calls.
+    - LockMethod: limits access to the instance to one thread at a time via re-entrant lock.
+    - InstanceConfigurableMethod: can be configured via kwargs and those values modified in
+      an instance dependent manner (see common.InstanceConfig).
+    - TransformMethod: provides a way to convert input or output values.
+
+    Some of these methods require that the class containing them derives from a particular mixin.
+
+    :copyright: 2019 by pimpmyclass Authors, see AUTHORS for more details.
+    :license: BSD, see LICENSE for more details.
+"""
+
 
 from collections import defaultdict
 import functools

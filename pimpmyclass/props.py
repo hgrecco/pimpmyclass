@@ -1,4 +1,30 @@
+# -*- coding: utf-8 -*-
+"""
+    pimpmyclass.props
+    ~~~~~~~~~~~~~~~~~
 
+    Implement pimped properties:
+
+    - NamedProperty: has a name and can be configured via kwargs (see common.Config).
+    - StorageProperty: can store and retrieve information from the instance to which is attached.
+    - StatsProperty: keep stats of all get and set operations.
+    - LogProperty: logs all get and set operations.
+    - LockProperty: limits access to the instance to one thread at a time via re-entrant lock.
+    - InstanceConfigurableProperty: can be configured via kwargs and those values modified in
+      an instance dependent manner (see common.InstanceConfig).
+    - TransformProperty: provides a way to convert get or set values.
+    - CacheProperty: has a cache that can be invalidated.
+    - GetCacheProperty: stores in the cache the output of the last get operation.
+    - SetCacheProperty: stores in the cache the input to the last set operation.
+    - PreventUnnecessarySetProperty: do not set the value if it matches the value in the cache.
+    - ReadOnceProperty: do not get the value if it is already in the cache.
+    - ObservableProperty: emits a signal if the cache changes.
+
+    Some of these properties require that the class containing them derives from a particular mixin.
+
+    :copyright: 2019 by pimpmyclass Authors, see AUTHORS for more details.
+    :license: BSD, see LICENSE for more details.
+"""
 
 from collections import defaultdict
 import functools as ft

@@ -1,11 +1,14 @@
 # -*- coding: utf-8 -*-
 """
-    lantz_core.stats
-    ~~~~~~~~~~~
+    pimpmyclass.stats
+    ~~~~~~~~~~~~~~~~~
 
     Implements an statistical accumulator
 
-    :copyright: 2018 by Lantz Authors, see AUTHORS for more details.
+
+    Taken from Lantz 0.3
+
+    :copyright: 2019 by Lantz Authors, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
 """
 
