@@ -1,11 +1,15 @@
-Lantz-drivers Changelog
-=======================
+pimpmyclass changelog
+=====================
 
 
 0.4 (unreleased)
 ----------------
 
-- Nothing changed yet.
+- Renamed Config to InstanceConfig and implemented Config for instance
+  independent configuration.
+- Implemented automatic filling of Config and InstanceConfig with kwargs.
+- Implemented default, value and type checking for Config and InstanceConfig
+- More testing and docs.
 
 
 0.3 (2019-01-16)
