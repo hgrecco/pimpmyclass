@@ -1,83 +1,17 @@
 
-import copy
 from collections import defaultdict
 import functools
 import inspect
 import weakref
 
-from .helpers import require, InstanceConfig, keep_if_not, CONFIG_UNSET, append_lines_to_docstring
+from .helpers import require, InstanceConfig, CONFIG_UNSET, append_lines_to_docstring, NamedCommon
 from .mixins import LockMixin, LogMixin, StorageMixin, BaseLogMixin
 from .stats import RunningStats
 
 
-class NamedMethod:
+class NamedMethod(NamedCommon):
 
     _func = None
-
-    _config = None
-    _config_objects = None
-
-    def __init__(self, **kwargs):
-        self.kwargs = {}
-
-        if self._config_objects:
-            self._config = {name: obj.default for name, obj in self._config_objects.items()}
-
-            for k in self._config.keys():
-                if k in kwargs:
-                    v = kwargs.pop(k)
-                    setattr(self, k, v)
-                    self.kwargs[k] = v
-
-        if kwargs:
-            raise TypeError("%s() got an unexpected keyword argument '%s'" %
-                            (self.__class__.__name__, list(kwargs.keys())[0]))
-
-        if self._config:
-            missing = tuple(k for k, v in self._config.items() if v is CONFIG_UNSET)
-            if missing:
-                raise TypeError("%s() is missing %d positional argument%s: %s" %
-                                (self.__class__.__name__, len(missing),
-                                 's' if len(missing) > 1 else '', ','.join(missing)))
-
-
-    @classmethod
-    def fulldoc(cls):
-        if not cls._config_objects:
-            return cls.__doc__
-
-        doc = cls.__doc__ or ''
-
-        lines = ['Inherited parameters',
-                 '--------------------']
-
-        for name, obj in cls._config_objects.items():
-            desc = []
-            if obj.valid_values:
-                desc.append(' or '.join(repr(el) for el in obj.valid_values))
-            if obj.valid_types:
-                desc.append(' or '.join(el.__name__ for el in obj.valid_types))
-            if obj.check_func:
-                desc.append(' Note: checking function')
-
-            if desc:
-                desc = ' and '.join(desc)
-            else:
-                desc = ''
-            if obj.default is not CONFIG_UNSET:
-                if desc:
-                    desc += ' '
-                desc += '(default=%r)' % obj.default
-
-            if desc:
-                lines.append('%s : %s' % (name, desc))
-            else:
-                lines.append(name)
-
-            if obj.__doc__:
-                lines.append('    ' + obj.__doc__)
-
-        return append_lines_to_docstring(lines, doc, mixed_fallback='')
 
     @property
     def name(self):
@@ -92,9 +26,6 @@ class NamedMethod:
         return tuple(self.signature.parameters.keys())
 
     def check_signature(self, func):
-        pass
-
-    def __set_name__(self, owner, name):
         pass
 
     def __call__(self, func):
@@ -137,19 +68,6 @@ class NamedMethod:
 
     def raw_call(self, instance, *args, **kwargs):
         return self._func(instance, *args, **kwargs)
-
-    def config_get(self, instance, key):
-        return self._config[key]
-
-    def config_set(self, instance, key, value):
-        self._config[key] = value
-
-    def config_iter(self, instance):
-        for key in self._config.keys():
-            yield key, self.config_get(instance, key)
-
-    def on_config_set(self, instance, key, value):
-        pass
 
 
 class LockMethod(NamedMethod):
