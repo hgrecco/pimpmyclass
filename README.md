@@ -4,6 +4,7 @@ Pimp My Class
 [![Build Status](https://travis-ci.org/hgrecco/pimpmyclass.svg?branch=master)](https://travis-ci.org/hgrecco/pimpmyclass)
 ![Python Version](https://img.shields.io/pypi/pyversions/pimpmyclass.svg)
 [![Python Version](https://img.shields.io/pypi/v/pimpmyclass.svg)](https://pypi.org/project/pimpmyclass/)
+[![Documentation Status](https://readthedocs.org/projects/pimpmyclass/badge/?version=latest)](https://pimpmyclass.readthedocs.io/en/latest/?badge=latest)
 
 This library provides base classes to enable useful behavior in Python Objects.
 
