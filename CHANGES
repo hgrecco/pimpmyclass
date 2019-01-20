@@ -2,8 +2,8 @@ pimpmyclass changelog
 =====================
 
 
-0.5 (unreleased)
-----------------
+0.4.1 (2019-01-19)
+------------------
 
 - Document log_values.
 - Check for key being member of list/tuple/set in dictproperties.
