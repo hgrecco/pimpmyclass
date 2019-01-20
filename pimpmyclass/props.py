@@ -162,8 +162,9 @@ class StorageProperty(NamedProperty):
 
         if ns in cls._storage_sub_ns_cls:
             if not issubclass(cls, cls._storage_sub_ns_cls[ns]):
-                raise ValueError('Class %r storage namespace (%s) collides with '
-                                 'class %r' % (cls, ns, cls._storage_sub_ns_cls[ns]))
+                if cls is not cls._storage_sub_ns_cls[ns]:
+                    raise ValueError('Class %r storage namespace (%s) collides with '
+                                     'class %r' % (cls, ns, cls._storage_sub_ns_cls[ns]))
         else:
             if cls._storage_ns_init is None:
                 raise ValueError('Class %s must specify a storage initializer '
