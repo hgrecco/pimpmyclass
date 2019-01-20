@@ -9,6 +9,7 @@
     :license: BSD, see LICENSE for more details.
 """
 
+import inspect
 
 from .helpers import append_lines_to_docstring, require_any
 
@@ -89,7 +90,6 @@ class InstanceConfig(Config):
         setattr(owner, name + '_iset', _iset)
 
 
-
 class MetaDoc(type):
 
     def __new__(cls, name, bases, attrs):
@@ -113,14 +113,16 @@ class NamedCommon(metaclass=MetaDoc):
 
         self._kwargs = {}
 
-        if self._config_objects:
-            self._config = {name: obj.default for name, obj in self._config_objects.items()}
+        self._config = {}
+        for base_class in inspect.getmro(self.__class__):
+            if getattr(base_class, '_config_objects', None):
+                self._config.update({name: obj.default for name, obj in base_class._config_objects.items()})
 
-            for k in self._config.keys():
-                if k in kwargs:
-                    v = kwargs.pop(k)
-                    setattr(self, k, v)
-                    self._kwargs[k] = v
+        for k in self._config.keys():
+            if k in kwargs:
+                v = kwargs.pop(k)
+                setattr(self, k, v)
+                self._kwargs[k] = v
 
         if kwargs:
             raise TypeError("%s() got an unexpected keyword argument '%s'" %
