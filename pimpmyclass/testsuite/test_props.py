@@ -242,6 +242,64 @@ class TestOtherProperties(unittest.TestCase):
                                        "Getting properr",
                                        "While getting properr: GetArrrg!"])
 
+    def test_derive_log_config_false(self):
+
+        class MyProp(props.LogProperty):
+            pass
+
+        Dummy = define(lambda: MyProp(), mixins.LogMixin)
+        x = Dummy()
+
+        hdl = MemHandler()
+        x.logger.addHandler(hdl)
+        x.logger.setLevel(logging.DEBUG)
+
+        x.prop = 1
+        y = x.prop
+        with self.assertRaises(Exception):
+            x.prop = None
+
+        with self.assertRaises(Exception):
+            x.properr
+
+        self.assertEqual(hdl.history, ['Setting prop to 1',
+                                       'prop was set to 1',
+                                       'Getting prop',
+                                       'Got 3 for prop',
+                                       'Setting prop to None',
+                                       'While setting prop to None: Arrrg!',
+                                       'Getting properr',
+                                       'While getting properr: GetArrrg!'])
+
+    def test_derive_log_config_false(self):
+
+        class MyProp(props.TransformProperty, props.LogProperty):
+            pass
+
+        Dummy = define(MyProp, mixins.LogMixin, mixins.StorageMixin)
+        x = Dummy()
+
+        hdl = MemHandler()
+        x.logger.addHandler(hdl)
+        x.logger.setLevel(logging.DEBUG)
+
+        x.prop = 1
+        y = x.prop
+        with self.assertRaises(Exception):
+            x.prop = None
+
+        with self.assertRaises(Exception):
+            x.properr
+
+        self.assertEqual(hdl.history, ['Setting prop to 1',
+                                       'prop was set to 1',
+                                       'Getting prop',
+                                       'Got 3 for prop',
+                                       'Setting prop to None',
+                                       'While setting prop to None: Arrrg!',
+                                       'Getting properr',
+                                       'While getting properr: GetArrrg!'])
+
     def test_log_config_fun(self):
 
         Dummy = define(lambda: props.LogProperty(log_values=lambda x: 2 * x if isinstance(x, int) else x), mixins.LogMixin)
