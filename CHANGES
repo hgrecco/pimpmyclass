@@ -5,7 +5,9 @@ pimpmyclass changelog
 0.5 (unreleased)
 ----------------
 
-- Nothing changed yet.
+- Document log_values.
+- Check for key being member of list/tuple/set in dictproperties.
+- Fixed bug that precluded composing properties/methods with config.
 
 
 0.4 (2019-01-19)
