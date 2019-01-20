@@ -121,6 +121,10 @@ class BoundedDictProperty:
             except KeyError:
                 raise KeyError('{} is not valid key for {} {}'.format(key, self.df.name, keys))
 
+        elif isinstance(keys, (set, list, tuple)):
+            if key not in keys:
+                raise KeyError('{} is not valid key for {} {}'.format(key, self.df.name, keys))
+
         return key
 
     def __getitem__(self, key):
