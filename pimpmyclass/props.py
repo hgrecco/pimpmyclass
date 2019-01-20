@@ -277,7 +277,9 @@ class LogProperty(NamedProperty):
     **Requires** that the owner class inherits :class:`pimpmyclass.mixins.LogMixin`.
     """
 
-    log_values = Config(default=True)
+    log_values = Config(default=True,
+                        doc='If False, just the types (not the values) will logged.\n'
+                            'An obj to str callable can be provided to perform custom serialization.' )
 
     def __set_name__(self, owner, name):
         require(self, owner, name, BaseLogMixin)
