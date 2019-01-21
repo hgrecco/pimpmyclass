@@ -2,8 +2,8 @@ pimpmyclass changelog
 =====================
 
 
-0.5 (unreleased)
-----------------
+0.4.2 (2019-01-21)
+------------------
 
 - Created get/set _notifiy to be called after succesfull get/set.
 
