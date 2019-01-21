@@ -59,6 +59,12 @@ class NamedProperty(NamedCommon):
     def name(self):
         return self._name
 
+    def get_notify(self, instance, value):
+        pass
+
+    def set_notify(self, instance, value):
+        pass
+
     def __call__(self, func):
         if self.fget is None:
             return self.getter(func)
@@ -73,7 +79,9 @@ class NamedProperty(NamedCommon):
             raise AttributeError('%s is a read-only property of %s' %
                                  (self.name, instance.__class__.__name__))
 
-        return self.get(instance, objtype)
+        value = self.get(instance, objtype)
+        self.get_notify(instance, value)
+        return value
 
     def __set__(self, instance, value):
 
@@ -82,6 +90,7 @@ class NamedProperty(NamedCommon):
                                  (self.name, instance.__class__.__name__))
 
         self.set(instance, value)
+        self.set_notify(instance, value)
 
     def __delete__(self, instance):
 
@@ -447,13 +456,10 @@ class GetCacheProperty(CacheProperty):
     **Requires** that the owner class inherits :class:`pimpmyclass.mixins.StorageMixin`.
     """
 
-    def get(self, instance, objtype):
-
-        value = super().get(instance, objtype)
+    def get_notify(self, instance, value):
+        super().get_notify(instance, value)
 
         self.store(instance, value)
-
-        return value
 
 
 class SetCacheProperty(CacheProperty):
@@ -462,8 +468,8 @@ class SetCacheProperty(CacheProperty):
     **Requires** that the owner class inherits :class:`pimpmyclass.mixins.StorageMixin`.
     """
 
-    def set(self, instance, value):
-        super().set(instance, value)
+    def set_notify(self, instance, value):
+        super().set_notify(instance, value)
 
         self.store(instance, value)
 
