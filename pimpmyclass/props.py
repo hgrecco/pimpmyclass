@@ -531,11 +531,10 @@ class ObservableProperty(CacheProperty):
         super().__set_name__(owner, name)
 
     def store(self, instance, value):
-        if isinstance(self.name, DictPropertyNameKey):
-            old_value = self.recall(instance)
-            super().store(instance, value)
-            getattr(instance, self.name.name + '_changed').emit(value, old_value, self.name.key)
-        else:
-            old_value = self.recall(instance)
-            super().store(instance, value)
-            getattr(instance, self.name + '_changed').emit(value, old_value)
+        old_value = self.recall(instance)
+        super().store(instance, value)
+        if old_value != value:
+            if isinstance(self.name, DictPropertyNameKey):
+                getattr(instance, self.name.name + '_changed').emit(value, old_value, self.name.key)
+            else:
+                getattr(instance, self.name + '_changed').emit(value, old_value)
