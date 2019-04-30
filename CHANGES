@@ -2,8 +2,8 @@ pimpmyclass changelog
 =====================
 
 
-0.5 (unreleased)
-----------------
+0.4.3 (2019-04-30)
+------------------
 
 - Changed signal is only emitted when the cache value actually changes.
 
