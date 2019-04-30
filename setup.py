@@ -13,7 +13,7 @@ long_description = '\n\n'.join([read('README.md'),
 
 setup(
     name='pimpmyclass',
-    version='0.4.3',
+    version='0.5.dev0',
     description='Pimp your Class/Property/Methods with useful functionality',
     long_description=long_description,
     keywords='classes properties descriptors decorators',
